@@ -45,7 +45,7 @@ const navigate = (item) => {
   bottom: 0;
   width: 78%;
   max-width: 340px;
-  background: #F7F2EE;
+  background: #f7f2ee;
   z-index: 60;
   padding-top: 12px;
 }
@@ -71,7 +71,9 @@ const navigate = (item) => {
   text-decoration: none;
   transition: color 0.15s ease;
 }
-.menu-drawer a:hover { color: #B47F60 }
+.menu-drawer a:hover {
+  color: #b47f60;
+}
 .slide-enter-active,
 .slide-leave-active {
   transition: transform 0.25s ease;

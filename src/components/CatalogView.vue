@@ -92,7 +92,10 @@ const categories = ref([
   },
   { name: 'Earrings', image: 'https://images.unsplash.com/photo-1704957205327-9fbd44d683b7?w=500' },
   { name: 'Relojes', image: 'https://images.unsplash.com/photo-1519741495165-61d2d3dd0a2a?w=500' },
-  { name: 'Compromiso', image: 'https://images.unsplash.com/photo-1503602642458-232111445657?w=500' },
+  {
+    name: 'Compromiso',
+    image: 'https://images.unsplash.com/photo-1503602642458-232111445657?w=500',
+  },
 ])
 
 const selectedCategory = ref('Rings')
@@ -183,7 +186,12 @@ function open(product) {
   display: flex;
   align-items: center;
 }
-.logo-placeholder { width:36px; height:36px; margin-left:8px; background:transparent }
+.logo-placeholder {
+  width: 36px;
+  height: 36px;
+  margin-left: 8px;
+  background: transparent;
+}
 .badge {
   background: #b47f60;
   color: white;
