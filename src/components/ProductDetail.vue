@@ -16,13 +16,27 @@
       </div>
       <q-btn flat round class="cart-trigger-btn" @click="$emit('open-cart')">
         <q-icon name="shopping_bag" size="20px" />
-        <q-badge color="accent" floating rounded v-if="cartCount" class="custom-cart-badge" :class="{ 'badge-pulse': animateBadge }">{{ cartCount }}</q-badge>
+        <q-badge
+          color="accent"
+          floating
+          rounded
+          v-if="cartCount"
+          class="custom-cart-badge"
+          :class="{ 'badge-pulse': animateBadge }"
+          >{{ cartCount }}</q-badge
+        >
       </q-btn>
     </header>
 
     <div class="q-pa-md">
-      <q-btn flat icon="arrow_back" label="Volver al Catálogo" class="back-btn text-accent q-mb-md" @click="$emit('back')" />
-      
+      <q-btn
+        flat
+        icon="arrow_back"
+        label="Volver al Catálogo"
+        class="back-btn text-accent q-mb-md"
+        @click="$emit('back')"
+      />
+
       <div class="detail-grid q-mt-sm">
         <div class="image-wrap">
           <q-img :src="product.image" alt="" class="detail-qimg" img-class="detail-img" />
@@ -32,20 +46,30 @@
           <h1 class="name font-serif">{{ product.name }}</h1>
           <p class="desc font-sans">{{ product.description }}</p>
           <div class="price font-serif">
-            <span v-if="hasActiveSale(product)" class="regular-price">{{ formatPrice(product.price) }}</span>
+            <span v-if="hasActiveSale(product)" class="regular-price">{{
+              formatPrice(product.price)
+            }}</span>
             <span>{{ formatPrice(getEffectivePrice(product)) }}</span>
           </div>
           <div :class="['stock-status', { empty: product.stock <= 0 }]">
             {{ product.stock > 0 ? `${product.stock} unidades disponibles` : 'Producto agotado' }}
           </div>
-          
+
           <!-- Quantity Selector -->
           <div class="qty-select-wrapper flex items-center q-my-lg">
             <span class="qty-label">Cantidad:</span>
             <div class="qty-selector-pill flex items-center justify-between">
               <q-btn flat round size="sm" icon="remove" class="qty-btn" @click="decreaseQty" />
               <span class="qty-val">{{ quantity }}</span>
-              <q-btn flat round size="sm" icon="add" class="qty-btn" :disable="quantity >= product.stock" @click="increaseQty" />
+              <q-btn
+                flat
+                round
+                size="sm"
+                icon="add"
+                class="qty-btn"
+                :disable="quantity >= product.stock"
+                @click="increaseQty"
+              />
             </div>
           </div>
 
@@ -74,14 +98,17 @@ const quantity = ref(1)
 const animateBadge = ref(false)
 
 // Watch cart length changes to pulse the badge
-watch(() => store.cart.length, (newVal, oldVal) => {
-  if (newVal > oldVal) {
-    animateBadge.value = true
-    setTimeout(() => {
-      animateBadge.value = false
-    }, 350)
-  }
-})
+watch(
+  () => store.cart.length,
+  (newVal, oldVal) => {
+    if (newVal > oldVal) {
+      animateBadge.value = true
+      setTimeout(() => {
+        animateBadge.value = false
+      }, 350)
+    }
+  },
+)
 
 const cartCount = computed(() => store.cart.length)
 
@@ -89,7 +116,7 @@ function formatPrice(value) {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
-    maximumFractionDigits: 0
+    maximumFractionDigits: 0,
   }).format(value)
 }
 
@@ -108,14 +135,14 @@ function decreaseQty() {
 function onAddToCart() {
   if (props.product.stock <= 0) return
 
-  const currentQuantity = store.cart.find(item => item.id === props.product.id)?.quantity || 0
+  const currentQuantity = store.cart.find((item) => item.id === props.product.id)?.quantity || 0
   if (currentQuantity + quantity.value > props.product.stock) {
     $q.notify({
       message: 'Stock insuficiente',
       caption: `Solo hay ${props.product.stock} unidades disponibles.`,
       color: 'negative',
       textColor: 'white',
-      icon: 'inventory_2'
+      icon: 'inventory_2',
     })
     return
   }
@@ -127,7 +154,7 @@ function onAddToCart() {
     position: 'bottom-right',
     timeout: 1800,
     classes: 'luxury-toast',
-    icon: 'check_circle'
+    icon: 'check_circle',
   })
 }
 </script>

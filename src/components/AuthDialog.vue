@@ -10,21 +10,34 @@
       <!-- Main Body -->
       <div class="auth-body flex flex-column gap-4">
         <p class="auth-subtitle font-sans text-center">
-          Inicia sesión para registrar tu pedido por transferencia bancaria y realizar el seguimiento de tus joyas.
+          Inicia sesión para registrar tu pedido por transferencia bancaria y realizar el
+          seguimiento de tus joyas.
         </p>
 
         <!-- Social Login Methods -->
         <div class="social-login-methods flex flex-column gap-3">
           <button class="social-btn google-btn font-sans" @click="handleSocialLogin('Google')">
             <svg class="social-icon" viewBox="0 0 24 24" width="20" height="20">
-              <path fill="#EA4335" d="M12 5.04c1.7 0 3.2.6 4.4 1.7l3.3-3.3C17.7 1.4 15 0 12 0 7.3 0 3.3 2.7 1.4 6.6l3.9 3C6.3 6.9 8.9 5.04 12 5.04z" />
-              <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.7-.2-2.3H12v4.4h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.7z" />
-              <path fill="#FBBC05" d="M5.3 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.4 7.2C.5 9.1 0 11.2 0 13.5s.5 4.4 1.4 6.3l3.9-3z" />
-              <path fill="#34A853" d="M12 24c3.2 0 6-1.1 7.9-2.9l-3.7-2.9c-1.1.7-2.5 1.2-4.2 1.2-3.1 0-5.7-1.9-6.7-4.6l-3.9 3C3.3 21.3 7.3 24 12 24z" />
+              <path
+                fill="#EA4335"
+                d="M12 5.04c1.7 0 3.2.6 4.4 1.7l3.3-3.3C17.7 1.4 15 0 12 0 7.3 0 3.3 2.7 1.4 6.6l3.9 3C6.3 6.9 8.9 5.04 12 5.04z"
+              />
+              <path
+                fill="#4285F4"
+                d="M23.5 12.3c0-.8-.1-1.7-.2-2.3H12v4.4h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.7z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M5.3 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.4 7.2C.5 9.1 0 11.2 0 13.5s.5 4.4 1.4 6.3l3.9-3z"
+              />
+              <path
+                fill="#34A853"
+                d="M12 24c3.2 0 6-1.1 7.9-2.9l-3.7-2.9c-1.1.7-2.5 1.2-4.2 1.2-3.1 0-5.7-1.9-6.7-4.6l-3.9 3C3.3 21.3 7.3 24 12 24z"
+              />
             </svg>
             Continuar con Google
           </button>
-          
+
           <button class="social-btn apple-btn font-sans" @click="handleSocialLogin('Apple')">
             <q-icon name="apple" size="20px" class="social-icon text-black" />
             Continuar con Apple
@@ -42,8 +55,20 @@
           <div v-if="!codeSent">
             <!-- Selector de Método: Email o WhatsApp -->
             <div class="flex justify-center gap-4 q-mb-md">
-              <q-radio v-model="loginMethod" val="email" label="Correo Electrónico" color="accent" class="font-sans text-xs" />
-              <q-radio v-model="loginMethod" val="whatsapp" label="WhatsApp" color="accent" class="font-sans text-xs" />
+              <q-radio
+                v-model="loginMethod"
+                val="email"
+                label="Correo Electrónico"
+                color="accent"
+                class="font-sans text-xs"
+              />
+              <q-radio
+                v-model="loginMethod"
+                val="whatsapp"
+                label="WhatsApp"
+                color="accent"
+                class="font-sans text-xs"
+              />
             </div>
 
             <!-- Input Principal -->
@@ -57,7 +82,7 @@
               bg-color="white"
               dense
               class="auth-input font-sans"
-              :rules="[val => !!val || 'El correo es requerido']"
+              :rules="[(val) => !!val || 'El correo es requerido']"
             />
             <q-input
               v-else
@@ -70,15 +95,10 @@
               bg-color="white"
               dense
               class="auth-input font-sans"
-              :rules="[val => !!val || 'El número es requerido']"
+              :rules="[(val) => !!val || 'El número es requerido']"
             />
 
-            <q-btn
-              unelevated
-              class="btn-send-code full-width"
-              type="submit"
-              :loading="loading"
-            >
+            <q-btn unelevated class="btn-send-code full-width" type="submit" :loading="loading">
               Enviar código de acceso
             </q-btn>
           </div>
@@ -86,9 +106,11 @@
           <!-- Code Entry Panel -->
           <div v-else class="code-panel flex flex-column items-center gap-3">
             <p class="code-instructions font-sans text-center">
-              Hemos enviado un código de 4 dígitos a <strong>{{ loginMethod === 'email' ? email : phone }}</strong>.
+              Hemos enviado un código de 4 dígitos a
+              <strong>{{ loginMethod === 'email' ? email : phone }}</strong
+              >.
             </p>
-            
+
             <q-input
               v-model="verificationCode"
               outlined
@@ -100,7 +122,7 @@
               dense
               class="code-input font-sans text-center"
               input-class="text-center font-bold text-lg tracking-widest"
-              :rules="[val => val.length === 4 || 'Debe ingresar un código de 4 dígitos']"
+              :rules="[(val) => val.length === 4 || 'Debe ingresar un código de 4 dígitos']"
             />
 
             <q-btn
@@ -110,7 +132,7 @@
               @click="verifyCode"
               :loading="loading"
             />
-            
+
             <q-btn
               flat
               dense
@@ -131,7 +153,7 @@ import { useQuasar } from 'quasar'
 import { useShopStore } from '../stores/shop'
 
 const props = defineProps({
-  modelValue: { type: Boolean, default: false }
+  modelValue: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['update:modelValue', 'success'])
@@ -147,9 +169,12 @@ const phone = ref('')
 const verificationCode = ref('')
 
 // Keep dialog visibility in sync with parent v-model
-watch(() => props.modelValue, (newVal) => {
-  isOpen.value = newVal
-})
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    isOpen.value = newVal
+  },
+)
 
 watch(isOpen, (newVal) => {
   emit('update:modelValue', newVal)
@@ -170,7 +195,8 @@ function handleSocialLogin(provider) {
   loading.value = true
   setTimeout(() => {
     loading.value = false
-    const simulatedEmail = provider === 'Google' ? 'client.premium@gmail.com' : 'client.premium@apple.com'
+    const simulatedEmail =
+      provider === 'Google' ? 'client.premium@gmail.com' : 'client.premium@apple.com'
     store.loginUser(simulatedEmail, provider)
     $q.notify({
       message: 'Inicio de Sesión Exitoso',
@@ -179,7 +205,7 @@ function handleSocialLogin(provider) {
       textColor: 'dark',
       classes: 'luxury-toast',
       icon: 'verified',
-      timeout: 2000
+      timeout: 2000,
     })
     emit('success')
     closeDialog()
@@ -201,7 +227,7 @@ function handleSubmit() {
       textColor: 'dark',
       classes: 'luxury-toast',
       icon: 'mail',
-      timeout: 3000
+      timeout: 3000,
     })
   }, 1000)
 }
@@ -221,7 +247,7 @@ function verifyCode() {
       textColor: 'dark',
       classes: 'luxury-toast',
       icon: 'check_circle',
-      timeout: 2000
+      timeout: 2000,
     })
     emit('success')
     closeDialog()

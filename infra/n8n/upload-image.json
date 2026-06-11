@@ -13,21 +13,22 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        -600,
-        150
-      ]
+        -608,
+        160
+      ],
+      "webhookId": "1e6d9e5b-b784-438c-84f0-1c97946d5ab8"
     },
     {
       "parameters": {
-        "jsCode": "const binaryData = $input.item.binary || {};\nconst fileKey = Object.keys(binaryData)[0];\n\nif (!fileKey) {\n  return [{\n    json: {\n      ok: false,\n      final_response: {\n        status: 'error',\n        message: 'No se detectó ningún archivo binario en la petición.'\n      }\n    }\n  }];\n}\n\n// Generate a unique filename using timestamp\nconst ext = binaryData[fileKey].fileExtension || 'jpg';\nconst generatedName = `joyas-${Date.now()}-${Math.floor(Math.random()*10000)}.${ext}`;\n\nreturn [{\n  json: {\n    ok: true,\n    binaryPropertyName: fileKey,\n    fileName: generatedName\n  }\n}];"
+        "jsCode": "const binaryData = $input.item.binary || {};\nconst fileKey = Object.keys(binaryData)[0];\n\nif (!fileKey) {\n  return [{\n    json: {\n      ok: false,\n      final_response: {\n        status: 'error',\n        message: 'No se detectó ningún archivo binario en la petición.'\n      }\n    }\n  }];\n}\n\n// Read folder parameter, fallback to 'productos'\nlet folder = ($input.item.json.body && $input.item.json.body.folder) || \n             ($input.item.json.query && $input.item.json.query.folder) || \n             'productos';\n\n// Clean folder name\nfolder = folder.replace(/[^a-zA-Z0-9\\-_/]/g, '').trim();\nif (!folder) {\n  folder = 'productos';\n}\n\nconst ext = binaryData[fileKey].fileExtension || 'jpg';\nconst generatedName = `joyas-${Date.now()}-${Math.floor(Math.random()*10000)}.${ext}`;\n\nreturn [{\n  json: {\n    ok: true,\n    binaryPropertyName: fileKey,\n    fileName: `${folder}/${generatedName}`\n  },\n  binary: binaryData\n}];"
       },
       "id": "528ef902-12b4-4fa4-a212-be20ac28bd2d",
       "name": "Normalizar Archivo",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -350,
-        150
+        -352,
+        160
       ]
     },
     {
@@ -46,38 +47,13 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        -100,
-        150
+        -96,
+        160
       ]
     },
     {
       "parameters": {
-        "operation": "upload",
-        "bucketName": "joyeria-assets",
-        "fileKey": "={{ $json.fileName }}",
-        "binaryPropertyName": "={{ $json.binaryPropertyName }}",
-        "additionalFields": {
-          "acl": "public-read"
-        }
-      },
-      "id": "a105e551-789a-4c22-b6ab-bcbece44012e",
-      "name": "Subir a MinIO (S3)",
-      "type": "n8n-nodes-base.awsS3",
-      "typeVersion": 2,
-      "position": [
-        150,
-        50
-      ],
-      "credentials": {
-        "aws": {
-          "id": "9tjiKRmwXUpshjFn",
-          "name": "minio s3 credentials"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "const key = $('Subir a MinIO (S3)').item.json.key || $('Normalizar Archivo').item.json.fileName;\nconst baseUrl = process.env.MINIO_PUBLIC_URL || 'https://minio.tu-dominio.com/joyeria-assets';\n\nreturn [{\n  json: {\n    final_response: {\n      status: 'success',\n      url: `${baseUrl}/${key}`\n    }\n  }\n}];"
+        "jsCode": "const key = $('Subir a MinIO (S3)').item.json.key || $('Normalizar Archivo').item.json.fileName;\nconst baseUrl = 'https://minio.em-cloud.top/joyeria-assets';\n\nreturn [{\n  json: {\n    final_response: {\n      status: 'success',\n      url: `${baseUrl}/${key}`\n    }\n  }\n}];"
       },
       "id": "b79b882e-2cb0-464a-a039-37f8d752945d",
       "name": "Respuesta Exito Carga",
@@ -85,7 +61,7 @@
       "typeVersion": 2,
       "position": [
         400,
-        50
+        64
       ]
     },
     {
@@ -97,8 +73,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        150,
-        250
+        160,
+        256
       ]
     },
     {
@@ -112,9 +88,32 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        650,
-        150
+        656,
+        160
       ]
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "joyeria-assets",
+        "fileName": "={{ $json.fileName }}",
+        "binaryPropertyName": "={{ $json.binaryPropertyName }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [
+        160,
+        48
+      ],
+      "id": "6615dfa4-efb6-441b-bcc5-b004cdf5716a",
+      "name": "Subir a MinIO (S3)",
+      "credentials": {
+        "s3": {
+          "id": "vRE1Lzzh2H0KJwIH",
+          "name": "S3 account"
+        }
+      }
     }
   ],
   "connections": {
@@ -158,17 +157,6 @@
         ]
       ]
     },
-    "Subir a MinIO (S3)": {
-      "main": [
-        [
-          {
-            "node": "Respuesta Exito Carga",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Respuesta Exito Carga": {
       "main": [
         [
@@ -185,6 +173,17 @@
         [
           {
             "node": "Responder App",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Subir a MinIO (S3)": {
+      "main": [
+        [
+          {
+            "node": "Respuesta Exito Carga",
             "type": "main",
             "index": 0
           }

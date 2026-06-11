@@ -3,7 +3,6 @@ import { ref, computed } from 'vue'
 import api from '../services/api'
 import { getEffectivePrice } from '../utils/pricing'
 
-
 export const useShopStore = defineStore('shop', () => {
   // State
   const categories = ref([
@@ -12,7 +11,7 @@ export const useShopStore = defineStore('shop', () => {
     { id: 3, name: 'Relojes', icon: 'schedule' },
     { id: 4, name: 'Pulseras', icon: 'wrist' },
     { id: 5, name: 'Pendientes', icon: 'diamond' },
-    { id: 6, name: 'Collares', icon: 'jewelry' }
+    { id: 6, name: 'Collares', icon: 'jewelry' },
   ])
 
   const products = ref([
@@ -24,7 +23,7 @@ export const useShopStore = defineStore('shop', () => {
       price: 2500,
       image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400&h=400&fit=crop',
       description: 'Elegante anillo de oro blanco con diamante de 1.5 quilates',
-      rating: 4.9
+      rating: 4.9,
     },
     {
       id: 2,
@@ -33,7 +32,7 @@ export const useShopStore = defineStore('shop', () => {
       price: 1800,
       image: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=400&h=400&fit=crop',
       description: 'Anillo de platino con zafiro natural azul',
-      rating: 4.8
+      rating: 4.8,
     },
     {
       id: 3,
@@ -42,7 +41,7 @@ export const useShopStore = defineStore('shop', () => {
       price: 850,
       image: 'https://images.unsplash.com/photo-1515562141207-6811bcb0e7fb?w=400&h=400&fit=crop',
       description: 'Sencillo y elegante anillo de oro 18k',
-      rating: 4.7
+      rating: 4.7,
     },
     // Cadenas (id: 2)
     {
@@ -52,7 +51,7 @@ export const useShopStore = defineStore('shop', () => {
       price: 1200,
       image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400&h=400&fit=crop',
       description: 'Cadena de oro macizo 18k, peso 8 gramos',
-      rating: 4.9
+      rating: 4.9,
     },
     {
       id: 5,
@@ -61,7 +60,7 @@ export const useShopStore = defineStore('shop', () => {
       price: 350,
       image: 'https://images.unsplash.com/photo-1511629214669-13d82dbb97f4?w=400&h=400&fit=crop',
       description: 'Cadena tejida en plata esterlina de 45cm',
-      rating: 4.6
+      rating: 4.6,
     },
     {
       id: 6,
@@ -70,7 +69,7 @@ export const useShopStore = defineStore('shop', () => {
       price: 150,
       image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=400&h=400&fit=crop',
       description: 'Resistente cadena de acero inoxidable quirúrgico',
-      rating: 4.5
+      rating: 4.5,
     },
     // Relojes (id: 3)
     {
@@ -80,7 +79,7 @@ export const useShopStore = defineStore('shop', () => {
       price: 8500,
       image: 'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=400&h=400&fit=crop',
       description: 'Reloj mecánico suizo, caja de acero quirúrgico',
-      rating: 5.0
+      rating: 5.0,
     },
     {
       id: 8,
@@ -89,7 +88,7 @@ export const useShopStore = defineStore('shop', () => {
       price: 4200,
       image: 'https://images.unsplash.com/photo-1579869847514-7b1f2534d30e?w=400&h=400&fit=crop',
       description: 'Reloj automático con cristal de zafiro',
-      rating: 4.8
+      rating: 4.8,
     },
     {
       id: 9,
@@ -98,7 +97,7 @@ export const useShopStore = defineStore('shop', () => {
       price: 1500,
       image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop',
       description: 'Diseño minimalista, movimiento de cuarzo suizo',
-      rating: 4.7
+      rating: 4.7,
     },
     // Pulseras (id: 4)
     {
@@ -108,7 +107,7 @@ export const useShopStore = defineStore('shop', () => {
       price: 950,
       image: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=400&h=400&fit=crop',
       description: 'Pulsera articulada de oro blanco 18k',
-      rating: 4.8
+      rating: 4.8,
     },
     {
       id: 11,
@@ -117,7 +116,7 @@ export const useShopStore = defineStore('shop', () => {
       price: 680,
       image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=400&h=400&fit=crop',
       description: 'Pulsera con perlas auténticas de agua dulce',
-      rating: 4.6
+      rating: 4.6,
     },
     // Pendientes (id: 5)
     {
@@ -127,7 +126,7 @@ export const useShopStore = defineStore('shop', () => {
       price: 1800,
       image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400&h=400&fit=crop',
       description: 'Par de pendientes con diamantes certificados',
-      rating: 4.9
+      rating: 4.9,
     },
     {
       id: 13,
@@ -136,7 +135,7 @@ export const useShopStore = defineStore('shop', () => {
       price: 450,
       image: 'https://images.unsplash.com/photo-1511629214669-13d82dbb97f4?w=400&h=400&fit=crop',
       description: 'Elegantes pendientes de oro 18k',
-      rating: 4.7
+      rating: 4.7,
     },
     // Collares (id: 6)
     {
@@ -146,7 +145,7 @@ export const useShopStore = defineStore('shop', () => {
       price: 1350,
       image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=400&h=400&fit=crop',
       description: 'Collar de oro con colgante de diamante',
-      rating: 4.8
+      rating: 4.8,
     },
     {
       id: 15,
@@ -155,28 +154,30 @@ export const useShopStore = defineStore('shop', () => {
       price: 890,
       image: 'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=400&h=400&fit=crop',
       description: 'Collar con perla negra de Tahití',
-      rating: 4.9
-    }
+      rating: 4.9,
+    },
   ])
 
   const cart = ref([])
   const selectedCategoryId = ref(null)
   const currentUser = ref(null)
   const orders = ref([])
+  const banners = ref([])
+  const bannerInterval = ref(5000)
 
   // Computed
   const filteredProducts = computed(() => {
     if (!selectedCategoryId.value) return products.value
-    return products.value.filter(p => p.categoryId === selectedCategoryId.value)
+    return products.value.filter((p) => p.categoryId === selectedCategoryId.value)
   })
 
   const cartTotal = computed(() => {
-    return cart.value.reduce((total, item) => total + (item.price * item.quantity), 0)
+    return cart.value.reduce((total, item) => total + item.price * item.quantity, 0)
   })
 
   // Actions
   const addToCart = (product, qty = 1) => {
-    const existingItem = cart.value.find(item => item.id === product.id)
+    const existingItem = cart.value.find((item) => item.id === product.id)
     const currentQuantity = existingItem?.quantity || 0
     const stock = Number(product.stock) || 0
 
@@ -191,7 +192,7 @@ export const useShopStore = defineStore('shop', () => {
         ...product,
         regular_price: product.price,
         price: getEffectivePrice(product),
-        quantity: qty
+        quantity: qty,
       })
     }
 
@@ -199,14 +200,14 @@ export const useShopStore = defineStore('shop', () => {
   }
 
   const removeFromCart = (productId) => {
-    const index = cart.value.findIndex(item => item.id === productId)
+    const index = cart.value.findIndex((item) => item.id === productId)
     if (index !== -1) {
       cart.value.splice(index, 1)
     }
   }
 
   const updateQuantity = (productId, quantity) => {
-    const item = cart.value.find(item => item.id === productId)
+    const item = cart.value.find((item) => item.id === productId)
     if (item) {
       if (quantity <= 0) {
         removeFromCart(productId)
@@ -250,9 +251,9 @@ export const useShopStore = defineStore('shop', () => {
         month: 'long',
         day: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
       }),
-      receiptImage: null
+      receiptImage: null,
     }
     orders.value.unshift(newOrder)
     clearCart()
@@ -260,7 +261,7 @@ export const useShopStore = defineStore('shop', () => {
   }
 
   const uploadReceipt = (orderId, receiptImage) => {
-    const order = orders.value.find(o => o.id === orderId)
+    const order = orders.value.find((o) => o.id === orderId)
     if (order) {
       order.receiptImage = receiptImage
       order.status = 'Pendiente de Verificación'
@@ -275,25 +276,78 @@ export const useShopStore = defineStore('shop', () => {
       if (Array.isArray(responseData)) {
         products.value = responseData
         cart.value = cart.value
-          .map(item => {
-            const product = responseData.find(current => current.id === item.id)
+          .map((item) => {
+            const product = responseData.find((current) => current.id === item.id)
             if (!product || product.stock <= 0) return null
 
             return {
               ...item,
               stock: product.stock,
-              quantity: Math.min(item.quantity, product.stock)
+              quantity: Math.min(item.quantity, product.stock),
             }
           })
           .filter(Boolean)
       }
     } catch (error) {
-      console.warn('⚠️ No se pudo obtener el catálogo de n8n, se mantendrán los productos locales:', error.message)
+      console.warn(
+        '⚠️ No se pudo obtener el catálogo de n8n, se mantendrán los productos locales:',
+        error.message,
+      )
+    }
+  }
+
+  const fetchCategories = async () => {
+    try {
+      const response = await api.get('/get-categories')
+      const responseData = response.data?.data ?? response.data?.categories ?? response.data
+
+      if (Array.isArray(responseData)) {
+        categories.value = responseData
+      }
+    } catch (error) {
+      console.warn(
+        '⚠️ No se pudo obtener las categorías de n8n, se mantendrán las locales:',
+        error.message,
+      )
+    }
+  }
+
+  const fetchBanners = async () => {
+    try {
+      const response = await api.get('/get-banners')
+      const responseData = response.data?.data ?? response.data?.banners ?? response.data
+      if (Array.isArray(responseData)) {
+        banners.value = responseData
+      }
+      if (response.data?.banner_interval) {
+        bannerInterval.value = Number(response.data.banner_interval)
+      }
+    } catch (error) {
+      console.warn('⚠️ No se pudo obtener los banners de n8n:', error.message)
+    }
+  }
+
+  const updateSettings = async (interval) => {
+    try {
+      const response = await api.post('/update-settings', {
+        admin_token: localStorage.getItem('ji_admin_token'),
+        banner_interval: interval,
+      })
+      if (response.data?.status === 'success') {
+        bannerInterval.value = Number(interval)
+        return true
+      }
+      return false
+    } catch (error) {
+      console.error('Error al actualizar los ajustes:', error.message)
+      throw error
     }
   }
 
   // Trigger initial fetch
+  fetchCategories()
   fetchProducts()
+  fetchBanners()
 
   return {
     // State
@@ -303,11 +357,13 @@ export const useShopStore = defineStore('shop', () => {
     selectedCategoryId,
     currentUser,
     orders,
-    
+    banners,
+    bannerInterval,
+
     // Computed
     filteredProducts,
     cartTotal,
-    
+
     // Actions
     addToCart,
     removeFromCart,
@@ -318,6 +374,9 @@ export const useShopStore = defineStore('shop', () => {
     logoutUser,
     createOrder,
     uploadReceipt,
-    fetchProducts
+    fetchProducts,
+    fetchCategories,
+    fetchBanners,
+    updateSettings,
   }
 })

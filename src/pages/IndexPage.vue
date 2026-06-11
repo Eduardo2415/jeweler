@@ -9,11 +9,7 @@
       @select-screen="onScreenSelect"
     />
 
-    <CartDrawer
-      :open="cartOpen"
-      @close="cartOpen = false"
-      @checkout="currentScreen = 'checkout'"
-    />
+    <CartDrawer :open="cartOpen" @close="cartOpen = false" @checkout="currentScreen = 'checkout'" />
 
     <CatalogView
       v-if="currentScreen === 'catalog'"
@@ -45,18 +41,14 @@
       @navigate="currentScreen = $event"
     />
 
-    <OrdersHistoryView
-      v-else-if="currentScreen === 'orders'"
-      @back="currentScreen = 'catalog'"
-    />
+    <OrdersHistoryView v-else-if="currentScreen === 'orders'" @back="currentScreen = 'catalog'" />
 
     <SiteFooter />
   </q-page>
 </template>
 
-
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import CatalogView from '../components/CatalogView.vue'
 import ProductDetail from '../components/ProductDetail.vue'
 import NavigationMenu from '../components/NavigationMenu.vue'
@@ -74,14 +66,9 @@ const cartOpen = ref(false)
 const selectedProduct = ref(null)
 const selectedCategory = ref('Rings')
 
-const categories = ref([
-  { name: 'Anillos', value: 'Rings', image: 'https://images.unsplash.com/photo-1499899833954-5ecd9439d17f?w=500' },
-  { name: 'Cadenas', value: 'Chains', image: 'https://images.unsplash.com/photo-1596213411964-ee96819a396c?w=500' },
-  { name: 'Brazaletes', value: 'Bracelets', image: 'https://images.unsplash.com/photo-1612437830721-4f8eab90c5a9?w=500' },
-  { name: 'Aretes', value: 'Earrings', image: 'https://images.unsplash.com/photo-1704957205327-9fbd44d683b7?w=500' },
-  { name: 'Relojes', value: 'Relojes', image: 'https://images.unsplash.com/photo-1519741495165-61d2d3dd0a2a?w=500' },
-  { name: 'Compromiso', value: 'Compromiso', image: 'https://images.unsplash.com/photo-1503602642458-232111445657?w=500' },
-])
+const categories = computed(() => {
+  return store.categories.filter(c => c.active)
+})
 
 const openProduct = (product) => {
   selectedProduct.value = product

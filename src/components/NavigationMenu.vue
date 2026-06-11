@@ -11,14 +11,7 @@
         <!-- Drawer Header -->
         <div class="drawer-header flex items-center justify-between q-px-md q-py-sm">
           <span class="logo font-serif">JUAN INVERSIONES</span>
-          <q-btn
-            flat
-            round
-            dense
-            icon="close"
-            class="close-btn"
-            @click="$emit('close')"
-          />
+          <q-btn flat round dense icon="close" class="close-btn" @click="$emit('close')" />
         </div>
 
         <!-- Scrollable content area -->
@@ -77,11 +70,7 @@
               <p class="card-desc">
                 Conéctate directamente con nuestro Concierge para una atención a medida.
               </p>
-              <q-btn
-                unelevated
-                class="btn-whatsapp-premium full-width"
-                @click="openWhatsApp"
-              >
+              <q-btn unelevated class="btn-whatsapp-premium full-width" @click="openWhatsApp">
                 <q-icon name="whatsapp" size="20px" class="q-mr-sm" />
                 Contactar Asesor
               </q-btn>
@@ -131,7 +120,8 @@ const navigateScreen = (screenName) => {
 }
 
 const openWhatsApp = () => {
-  const message = 'Hola JUAN INVERSIONES, me gustaría recibir asesoría personalizada sobre sus exclusivas piezas de joyería.'
+  const message =
+    'Hola JUAN INVERSIONES, me gustaría recibir asesoría personalizada sobre sus exclusivas piezas de joyería.'
   const url = `https://wa.me/5491112345678?text=${encodeURIComponent(message)}`
   window.open(url, '_blank')
 }
@@ -243,7 +233,7 @@ const openWhatsApp = () => {
       color: #b47f60;
       transform: translateX(4px);
     }
-    
+
     .text-accent-color {
       color: #b47f60;
     }
@@ -402,14 +392,14 @@ const openWhatsApp = () => {
 .drawer-footer {
   border-top: 1px solid rgba(180, 127, 96, 0.1);
   background-color: #faf7f4;
-  
+
   .footer-logo {
     font-size: 16px;
     font-weight: 700;
     letter-spacing: 1px;
     color: #666666;
   }
-  
+
   .footer-hours {
     font-size: 11px;
     color: #999999;

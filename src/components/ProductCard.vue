@@ -9,7 +9,9 @@
         <div>
           <h3 class="product-name">{{ product.name }}</h3>
           <p class="product-price">
-            <span v-if="hasActiveSale(product)" class="regular-price">${{ formatPrice(product.price) }}</span>
+            <span v-if="hasActiveSale(product)" class="regular-price"
+              >${{ formatPrice(product.price) }}</span
+            >
             ${{ formatPrice(getEffectivePrice(product)) }}
           </p>
         </div>
@@ -68,7 +70,9 @@ const formatPrice = (price) => {
   border: 1px solid rgba(0, 0, 0, 0.05);
   border-radius: 22px;
   overflow: hidden;
-  transition: transform 0.25s ease, border-color 0.25s ease;
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease;
 }
 
 .product-card:hover {

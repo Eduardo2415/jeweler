@@ -14,20 +14,16 @@
             <q-icon name="shopping_bag" size="22px" class="q-mr-xs text-accent" />
             <span class="logo font-serif">Tu Carrito</span>
           </div>
-          <q-btn
-            flat
-            round
-            dense
-            icon="close"
-            class="close-btn"
-            @click="$emit('close')"
-          />
+          <q-btn flat round dense icon="close" class="close-btn" @click="$emit('close')" />
         </div>
 
         <!-- Scrollable content area -->
         <div class="drawer-scroll-area flex-1 overflow-auto q-px-md q-py-md">
           <!-- Empty State -->
-          <div v-if="store.cart.length === 0" class="empty-state flex flex-column items-center justify-center q-py-xl text-center">
+          <div
+            v-if="store.cart.length === 0"
+            class="empty-state flex flex-column items-center justify-center q-py-xl text-center"
+          >
             <q-icon name="shopping_bag" size="64px" class="text-accent-light q-mb-md" />
             <h3 class="empty-title font-serif">El carrito está vacío</h3>
             <p class="empty-desc">
@@ -52,7 +48,7 @@
               <div class="thumb-wrap q-mr-sm">
                 <q-img :src="item.image" class="item-thumb" />
               </div>
-              
+
               <!-- Info -->
               <div class="item-info flex-1">
                 <div class="item-category">{{ item.category }}</div>
@@ -71,11 +67,26 @@
                   class="delete-btn q-mb-sm"
                   @click="removeItem(item.id)"
                 />
-                
+
                 <div class="qty-control flex items-center">
-                  <q-btn flat round size="xs" icon="remove" class="qty-btn" @click="decreaseQty(item.id)" />
+                  <q-btn
+                    flat
+                    round
+                    size="xs"
+                    icon="remove"
+                    class="qty-btn"
+                    @click="decreaseQty(item.id)"
+                  />
                   <span class="qty-val">{{ item.quantity }}</span>
-                  <q-btn flat round size="xs" icon="add" class="qty-btn" :disable="item.quantity >= item.stock" @click="increaseQty(item.id)" />
+                  <q-btn
+                    flat
+                    round
+                    size="xs"
+                    icon="add"
+                    class="qty-btn"
+                    :disable="item.quantity >= item.stock"
+                    @click="increaseQty(item.id)"
+                  />
                 </div>
               </div>
             </div>
@@ -105,11 +116,7 @@
             <span class="notice-text">Entrega asegurada y discreta en showroom.</span>
           </div>
 
-          <q-btn
-            unelevated
-            class="btn-checkout-whatsapp full-width"
-            @click="goToCheckout"
-          >
+          <q-btn unelevated class="btn-checkout-whatsapp full-width" @click="goToCheckout">
             <q-icon name="shopping_cart_checkout" size="22px" class="q-mr-sm" />
             Iniciar Checkout
           </q-btn>
@@ -123,7 +130,7 @@
 import { useShopStore } from '../stores/shop'
 
 defineProps({
-  open: { type: Boolean, default: false }
+  open: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['close', 'checkout'])
@@ -133,7 +140,7 @@ function formatPrice(value) {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
-    maximumFractionDigits: 0
+    maximumFractionDigits: 0,
   }).format(value)
 }
 
@@ -212,7 +219,7 @@ function goToCheckout() {
   height: 64px;
   background-color: #f7f2ee; // Warm header
   border-radius: 32px 0 0 0;
-  
+
   .logo {
     font-size: 19px;
     font-weight: 700;
@@ -326,7 +333,7 @@ function goToCheckout() {
   height: 30px;
   padding: 0 2px;
   border: 1px solid rgba(180, 127, 96, 0.1);
-  
+
   .qty-btn {
     color: #b47f60;
     padding: 0;
@@ -339,7 +346,7 @@ function goToCheckout() {
       background-color: rgba(180, 127, 96, 0.1);
     }
   }
-  
+
   .qty-val {
     font-size: 13px;
     font-weight: 600;
@@ -385,7 +392,7 @@ function goToCheckout() {
     background: rgba(180, 127, 96, 0.06);
     border-radius: 12px;
     border: 1px dashed rgba(180, 127, 96, 0.15);
-    
+
     .notice-text {
       font-size: 10px;
       color: #666666;

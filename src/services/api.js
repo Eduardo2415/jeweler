@@ -6,9 +6,9 @@ const baseURL = import.meta.env.VITE_N8N_WEBHOOK_URL || 'https://n8n.em-cloud.to
 const api = axios.create({
   baseURL,
   headers: {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
   },
-  timeout: 20000
+  timeout: 20000,
 })
 
 // Diagnostic interceptor
@@ -17,7 +17,7 @@ api.interceptors.response.use(
   (error) => {
     console.error('🌐 [n8n Gateway Integration Error]:', error.response?.status, error.message)
     return Promise.reject(error)
-  }
+  },
 )
 
 export default api

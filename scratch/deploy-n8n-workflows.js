@@ -16,7 +16,7 @@ const PREFIX = '[JI] '
 const client = axios.create({
   baseURL: N8N_API_URL,
   headers: { 'X-N8N-API-KEY': N8N_API_KEY },
-  timeout: 15000
+  timeout: 15000,
 })
 
 async function getExistingWorkflows() {
@@ -27,13 +27,13 @@ async function getExistingWorkflows() {
 async function deployWorkflows() {
   console.log('🔌 Conectando con n8n...')
   const existing = await getExistingWorkflows()
-  const existingNames = existing.map(w => w.name)
-  
+  const existingNames = existing.map((w) => w.name)
+
   console.log(`📋 Flujos existentes en n8n: ${existing.length}`)
   console.log()
 
   const workflowDir = path.resolve(__dirname, '../infra/n8n')
-  const files = fs.readdirSync(workflowDir).filter(f => f.endsWith('.json'))
+  const files = fs.readdirSync(workflowDir).filter((f) => f.endsWith('.json'))
 
   for (const file of files) {
     const filePath = path.join(workflowDir, file)
@@ -56,8 +56,8 @@ async function deployWorkflows() {
         nodes: workflow.nodes,
         connections: workflow.connections,
         settings: {
-          executionOrder: 'v1'
-        }
+          executionOrder: 'v1',
+        },
       }
 
       const response = await client.post('api/v1/workflows', payload)
@@ -79,7 +79,7 @@ async function deployWorkflows() {
   console.log('⚠️  Activa manualmente los flujos en n8n desde la interfaz web.')
 }
 
-deployWorkflows().catch(e => {
+deployWorkflows().catch((e) => {
   console.error('Error fatal:', e.message)
   process.exit(1)
 })

@@ -17,7 +17,7 @@ const products = [
     price: 2500,
     image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400&h=400&fit=crop',
     description: 'Elegante anillo de oro blanco con diamante de 1.5 quilates',
-    rating: 4.9
+    rating: 4.9,
   },
   {
     name: 'Anillo Zafiro Real',
@@ -25,7 +25,7 @@ const products = [
     price: 1800,
     image: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=400&h=400&fit=crop',
     description: 'Anillo de platino con zafiro natural azul',
-    rating: 4.8
+    rating: 4.8,
   },
   {
     name: 'Anillo Minimalista Oro',
@@ -33,7 +33,7 @@ const products = [
     price: 850,
     image: 'https://images.unsplash.com/photo-1515562141207-6811bcb0e7fb?w=400&h=400&fit=crop',
     description: 'Sencillo y elegante anillo de oro 18k',
-    rating: 4.7
+    rating: 4.7,
   },
   {
     name: 'Cadena Oro Macizo 50cm',
@@ -41,7 +41,7 @@ const products = [
     price: 1200,
     image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400&h=400&fit=crop',
     description: 'Cadena de oro macizo 18k, peso 8 gramos',
-    rating: 4.9
+    rating: 4.9,
   },
   {
     name: 'Cadena Plata Esterlina',
@@ -49,7 +49,7 @@ const products = [
     price: 350,
     image: 'https://images.unsplash.com/photo-1511629214669-13d82dbb97f4?w=400&h=400&fit=crop',
     description: 'Cadena tejida en plata esterlina de 45cm',
-    rating: 4.6
+    rating: 4.6,
   },
   {
     name: 'Cadena Acero Inoxidable',
@@ -57,7 +57,7 @@ const products = [
     price: 150,
     image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=400&h=400&fit=crop',
     description: 'Resistente cadena de acero inoxidable quirúrgico',
-    rating: 4.5
+    rating: 4.5,
   },
   {
     name: 'Reloj de Lujo Suizo',
@@ -65,7 +65,7 @@ const products = [
     price: 8500,
     image: 'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=400&h=400&fit=crop',
     description: 'Reloj mecánico suizo, caja de acero quirúrgico',
-    rating: 5.0
+    rating: 5.0,
   },
   {
     name: 'Reloj Automático Premium',
@@ -73,7 +73,7 @@ const products = [
     price: 4200,
     image: 'https://images.unsplash.com/photo-1579869847514-7b1f2534d30e?w=400&h=400&fit=crop',
     description: 'Reloj automático con cristal de zafiro',
-    rating: 4.8
+    rating: 4.8,
   },
   {
     name: 'Reloj Clásico Elegante',
@@ -81,15 +81,15 @@ const products = [
     price: 1500,
     image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop',
     description: 'Diseño minimalista, movimiento de cuarzo suizo',
-    rating: 4.7
-  }
+    rating: 4.7,
+  },
 ]
 
 async function seedProducts() {
   try {
     const client = axios.create({
       baseURL: DIRECTUS_URL,
-      headers: { Authorization: `Bearer ${DIRECTUS_ADMIN_TOKEN}` }
+      headers: { Authorization: `Bearer ${DIRECTUS_ADMIN_TOKEN}` },
     })
 
     console.log('Checking if products already exist in ji_productos...')

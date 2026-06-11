@@ -9,7 +9,8 @@
         </q-avatar>
         <span>JUAN INVERSIONES</span>
       </div>
-      <div style="width: 42px"></div> <!-- Spacer for symmetry -->
+      <div style="width: 42px"></div>
+      <!-- Spacer for symmetry -->
     </header>
 
     <div class="q-pa-md">
@@ -19,7 +20,9 @@
           <q-icon name="account_circle" size="48px" class="text-accent" />
           <div class="flex flex-column">
             <span class="profile-title font-serif">Mi Cuenta</span>
-            <span class="profile-email">{{ store.currentUser ? store.currentUser.email : 'Invitado' }}</span>
+            <span class="profile-email">{{
+              store.currentUser ? store.currentUser.email : 'Invitado'
+            }}</span>
           </div>
         </div>
         <q-btn
@@ -38,7 +41,10 @@
         <h3 class="section-title font-serif q-mb-lg">Historial de Pedidos</h3>
 
         <!-- Empty State -->
-        <div v-if="store.orders.length === 0" class="empty-state flex flex-column items-center justify-center q-py-xl text-center font-sans">
+        <div
+          v-if="store.orders.length === 0"
+          class="empty-state flex flex-column items-center justify-center q-py-xl text-center font-sans"
+        >
           <q-icon name="receipt_long" size="64px" class="text-accent-light q-mb-md" />
           <h4 class="empty-title font-serif">No tienes pedidos registrados</h4>
           <p class="empty-desc">
@@ -54,11 +60,7 @@
 
         <!-- Orders List -->
         <div v-else class="orders-list flex flex-column gap-4">
-          <div
-            v-for="order in store.orders"
-            :key="order.id"
-            class="order-card q-pa-md font-sans"
-          >
+          <div v-for="order in store.orders" :key="order.id" class="order-card q-pa-md font-sans">
             <!-- Order Header info -->
             <div class="order-card-header flex justify-between items-start wrap gap-2 q-mb-md">
               <div class="flex flex-column">
@@ -75,7 +77,11 @@
 
             <!-- Items summary inside order -->
             <div class="order-items-grid q-mb-md q-pa-sm">
-              <div v-for="(item, idx) in order.items" :key="idx" class="order-item flex items-center q-py-xs">
+              <div
+                v-for="(item, idx) in order.items"
+                :key="idx"
+                class="order-item flex items-center q-py-xs"
+              >
                 <q-avatar rounded size="36px" class="q-mr-sm border-light">
                   <q-img :src="item.image" />
                 </q-avatar>
@@ -83,19 +89,25 @@
                   <span class="item-name font-serif text-sm">{{ item.name }}</span>
                   <span class="item-qty text-xs text-muted q-ml-sm">x{{ item.quantity }}</span>
                 </div>
-                <span class="item-price text-sm">{{ formatPrice(item.price * item.quantity) }}</span>
+                <span class="item-price text-sm">{{
+                  formatPrice(item.price * item.quantity)
+                }}</span>
               </div>
             </div>
 
             <!-- Receipt upload verification (only for Transfer payment method) -->
             <div v-if="order.paymentMethod === 'transfer'" class="receipt-section q-mt-md q-pa-md">
-              <div v-if="!order.receiptImage" class="flex flex-column items-center text-center gap-2">
+              <div
+                v-if="!order.receiptImage"
+                class="flex flex-column items-center text-center gap-2"
+              >
                 <q-icon name="cloud_upload" size="32px" class="text-accent" />
                 <h5 class="receipt-title font-serif">Comprobante de Transferencia</h5>
                 <p class="receipt-desc">
-                  Sube una foto o captura de tu comprobante de pago para validar la orden en administración.
+                  Sube una foto o captura de tu comprobante de pago para validar la orden en
+                  administración.
                 </p>
-                
+
                 <q-btn
                   unelevated
                   class="btn-primary"
@@ -121,7 +133,8 @@
                     Comprobante Cargado
                   </div>
                   <p class="receipt-subtext">
-                    Nuestros asesores están revisando el depósito bancario. Se te notificará cuando se valide la transacción.
+                    Nuestros asesores están revisando el depósito bancario. Se te notificará cuando
+                    se valide la transacción.
                   </p>
                   <q-btn
                     flat
@@ -144,7 +157,9 @@
 
             <div v-else class="receipt-section whatsapp-section q-mt-md q-pa-sm flex items-center">
               <q-icon name="whatsapp" size="20px" class="text-green q-mr-sm" />
-              <span class="text-xs text-muted">Compra gestionada externamente a través de WhatsApp.</span>
+              <span class="text-xs text-muted"
+                >Compra gestionada externamente a través de WhatsApp.</span
+              >
             </div>
           </div>
         </div>
@@ -165,7 +180,7 @@ function formatPrice(value) {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
-    maximumFractionDigits: 0
+    maximumFractionDigits: 0,
   }).format(value)
 }
 
@@ -178,7 +193,7 @@ function handleLogout() {
     textColor: 'dark',
     classes: 'luxury-toast',
     icon: 'info',
-    timeout: 2000
+    timeout: 2000,
   })
   emit('back')
 }
@@ -210,7 +225,7 @@ function handleFileChange(event, orderId) {
       textColor: 'dark',
       classes: 'luxury-toast',
       icon: 'cloud_done',
-      timeout: 2500
+      timeout: 2500,
     })
   }
 }
@@ -256,7 +271,7 @@ function handleFileChange(event, orderId) {
   background-color: #ffffff;
   border-radius: 24px;
   border: 1px solid rgba(180, 127, 96, 0.15);
-  
+
   .profile-title {
     font-size: 18px;
     font-weight: 700;
@@ -267,7 +282,7 @@ function handleFileChange(event, orderId) {
     font-size: 12px;
     color: #666666;
   }
-  
+
   .btn-logout {
     font-size: 12px;
     text-transform: none;
@@ -338,7 +353,7 @@ function handleFileChange(event, orderId) {
     font-size: 11px;
     color: #999999;
   }
-  
+
   .order-total {
     font-size: 16px;
     font-weight: 700;

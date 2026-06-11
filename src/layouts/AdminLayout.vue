@@ -32,13 +32,7 @@
     </q-header>
 
     <!-- Sidebar / Drawer -->
-    <q-drawer
-      v-model="leftDrawerOpen"
-      show-if-above
-      bordered
-      class="admin-drawer"
-      :width="280"
-    >
+    <q-drawer v-model="leftDrawerOpen" show-if-above bordered class="admin-drawer" :width="280">
       <div class="drawer-content flex flex-column justify-between full-height py-4">
         <!-- Main Nav Menu -->
         <div class="nav-menu flex flex-column gap-2 q-px-md">
@@ -51,19 +45,22 @@
 
           <!-- Navigation Links -->
           <div class="nav-links flex flex-column gap-2 font-sans">
-            <router-link
-              to="/admin/productos"
-              class="nav-link-item"
-              active-class="active"
-            >
+            <router-link to="/admin/productos" class="nav-link-item" active-class="active">
               <q-icon name="diamond" size="20px" class="q-mr-sm icon" />
               <span>Gestión de Inventario</span>
             </router-link>
 
-            <router-link
-              to="/"
-              class="nav-link-item"
-            >
+            <router-link to="/admin/categorias" class="nav-link-item" active-class="active">
+              <q-icon name="category" size="20px" class="q-mr-sm icon" />
+              <span>Gestión de Categorías</span>
+            </router-link>
+
+            <router-link to="/admin/banners" class="nav-link-item" active-class="active">
+              <q-icon name="view_carousel" size="20px" class="q-mr-sm icon" />
+              <span>Gestión de Banners</span>
+            </router-link>
+
+            <router-link to="/" class="nav-link-item">
               <q-icon name="storefront" size="20px" class="q-mr-sm icon" />
               <span>Ver Tienda Pública</span>
             </router-link>
@@ -106,7 +103,7 @@ function handleLogout() {
     textColor: 'dark',
     classes: 'luxury-toast',
     icon: 'info',
-    timeout: 2000
+    timeout: 2000,
   })
   router.push('/admin/login')
 }
@@ -140,7 +137,7 @@ function handleLogout() {
   font-size: 16px;
   font-weight: 700;
   letter-spacing: 1.5px;
-  
+
   .admin-badge {
     font-size: 9px;
     background-color: #b47f60;

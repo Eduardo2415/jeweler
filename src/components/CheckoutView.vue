@@ -9,12 +9,16 @@
         </q-avatar>
         <span>JUAN INVERSIONES</span>
       </div>
-      <div style="width: 42px"></div> <!-- Spacer for symmetry -->
+      <div style="width: 42px"></div>
+      <!-- Spacer for symmetry -->
     </header>
 
     <div class="q-pa-md">
       <!-- Success / Confirmation Screen -->
-      <div v-if="completedOrder" class="success-screen flex flex-column items-center justify-center text-center q-py-xl">
+      <div
+        v-if="completedOrder"
+        class="success-screen flex flex-column items-center justify-center text-center q-py-xl"
+      >
         <q-icon name="check_circle" size="72px" class="text-accent q-mb-md" />
         <h2 class="success-title font-serif">¡Pedido Registrado!</h2>
         <p class="success-desc font-sans q-px-md">
@@ -32,8 +36,13 @@
         <div class="next-steps-card q-pa-md q-mb-lg font-sans">
           <h4 class="steps-title text-accent">Pasos a Seguir:</h4>
           <ol class="steps-list">
-            <li>Transfiere el total de <strong>{{ formatPrice(completedOrder.total) }}</strong> a una de nuestras cuentas.</li>
-            <li v-if="store.currentUser">Ve a <strong>Mis Pedidos</strong> y sube el comprobante para validar tu pago.</li>
+            <li>
+              Transfiere el total de <strong>{{ formatPrice(completedOrder.total) }}</strong> a una
+              de nuestras cuentas.
+            </li>
+            <li v-if="store.currentUser">
+              Ve a <strong>Mis Pedidos</strong> y sube el comprobante para validar tu pago.
+            </li>
             <li v-else>Guarda tu código de referencia y envía el comprobante a nuestro asesor.</li>
           </ol>
         </div>
@@ -76,7 +85,9 @@
                   <h4 class="item-name font-serif">{{ item.name }}</h4>
                   <span class="item-qty font-sans">Cantidad: {{ item.quantity }}</span>
                 </div>
-                <div class="item-price font-serif">{{ formatPrice(item.price * item.quantity) }}</div>
+                <div class="item-price font-serif">
+                  {{ formatPrice(item.price * item.quantity) }}
+                </div>
               </div>
             </div>
 
@@ -131,13 +142,10 @@
           <!-- Flow A: WhatsApp Checkout -->
           <div v-if="paymentMethod === 'whatsapp'" class="method-flow-card q-pa-md font-sans">
             <p class="flow-desc text-center">
-              Al finalizar, serás redirigido a WhatsApp con un mensaje pre-formateado que contiene tu pedido para que un asesor personal valide tu compra.
+              Al finalizar, serás redirigido a WhatsApp con un mensaje pre-formateado que contiene
+              tu pedido para que un asesor personal valide tu compra.
             </p>
-            <q-btn
-              unelevated
-              class="btn-primary full-width q-py-sm"
-              @click="checkoutWhatsApp"
-            >
+            <q-btn unelevated class="btn-primary full-width q-py-sm" @click="checkoutWhatsApp">
               <q-icon name="whatsapp" size="20px" class="q-mr-sm" />
               Finalizar Pedido en WhatsApp
             </q-btn>
@@ -146,13 +154,17 @@
           <!-- Flow B: Bank Transfer Checkout -->
           <div v-else class="method-flow-card q-pa-md flex flex-column gap-4 font-sans">
             <!-- State 1: Ask for authentication (if not logged in and not continuing as guest) -->
-            <div v-if="!store.currentUser && !guestCheckout" class="auth-prompt flex flex-column items-center text-center gap-3 q-py-md">
+            <div
+              v-if="!store.currentUser && !guestCheckout"
+              class="auth-prompt flex flex-column items-center text-center gap-3 q-py-md"
+            >
               <q-icon name="lock_outline" size="40px" class="text-accent" />
               <h4 class="auth-prompt-title font-serif">Registro Requerido para Historial</h4>
               <p class="auth-prompt-desc">
-                Inicia sesión para poder subir tu comprobante de pago y consultar el estado de tu pedido posteriormente. O continúa como invitado sin historial.
+                Inicia sesión para poder subir tu comprobante de pago y consultar el estado de tu
+                pedido posteriormente. O continúa como invitado sin historial.
               </p>
-              
+
               <div class="flex flex-column gap-2 full-width">
                 <q-btn
                   unelevated
@@ -199,7 +211,11 @@
 
               <!-- Bank data card -->
               <div class="bank-details-card q-pa-md">
-                <div v-for="(field, key) in currentBankData" :key="key" class="bank-field flex items-center justify-between q-py-xs">
+                <div
+                  v-for="(field, key) in currentBankData"
+                  :key="key"
+                  class="bank-field flex items-center justify-between q-py-xs"
+                >
                   <div class="field-info flex flex-column">
                     <span class="field-label text-uppercase">{{ key }}</span>
                     <span class="field-value">{{ field }}</span>
@@ -236,10 +252,7 @@
     </div>
 
     <!-- Login Modal Integration -->
-    <AuthDialog
-      v-model="authDialogOpen"
-      @success="onAuthSuccess"
-    />
+    <AuthDialog v-model="authDialogOpen" @success="onAuthSuccess" />
   </div>
 </template>
 
@@ -265,15 +278,15 @@ const banks = {
     cuenta: 'Cuenta Corriente: 123-456789-0',
     titular: 'JUAN INVERSIONES S.R.L.',
     cbu: '0170012301000045678901',
-    cuit: '30-71234567-8'
+    cuit: '30-71234567-8',
   },
   platino: {
     banco: 'Banco de Inversión Platino',
     cuenta: 'Cuenta Especial: 987-654321-0',
     titular: 'JUAN INVERSIONES S.R.L.',
     cbu: '0720098701000065432109',
-    cuit: '30-71234567-8'
-  }
+    cuit: '30-71234567-8',
+  },
 }
 
 const currentBankData = computed(() => {
@@ -284,7 +297,7 @@ function formatPrice(value) {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
-    maximumFractionDigits: 0
+    maximumFractionDigits: 0,
   }).format(value)
 }
 
@@ -297,7 +310,7 @@ function copyText(text, fieldName) {
       textColor: 'dark',
       classes: 'luxury-toast',
       icon: 'content_copy',
-      timeout: 1500
+      timeout: 1500,
     })
   })
 }
@@ -307,20 +320,21 @@ function onAuthSuccess() {
 }
 
 function checkoutWhatsApp() {
-  let message = 'Hola JUAN INVERSIONES, deseo finalizar mi pedido de las siguientes piezas de joyería de ultra-lujo:\n\n'
+  let message =
+    'Hola JUAN INVERSIONES, deseo finalizar mi pedido de las siguientes piezas de joyería de ultra-lujo:\n\n'
   message += '💍 DETALLES DEL PEDIDO:\n'
-  
+
   store.cart.forEach((item) => {
     message += `• ${item.quantity}x ${item.name} (${formatPrice(item.price)} c/u) - Total: ${formatPrice(item.price * item.quantity)}\n`
   })
-  
+
   message += `\n💵 TOTAL ESTIMADO: ${formatPrice(store.cartTotal)}\n`
   message += '📦 Envío: Express Asegurado Sin Costo\n\n'
   message += 'Por favor, indíquenme los pasos para coordinar la entrega en showroom o domicilio.'
 
   // Registrar orden en local también
   store.createOrder('whatsapp')
-  
+
   const url = `https://wa.me/5491112345678?text=${encodeURIComponent(message)}`
   window.open(url, '_blank')
   emit('back')
@@ -330,7 +344,7 @@ function finalizeTransferOrder() {
   const bankName = banks[selectedBank.value].banco
   const order = store.createOrder('transfer', bankName)
   completedOrder.value = order
-  
+
   $q.notify({
     message: 'Pedido Creado',
     caption: `Número de pedido generado: ${order.id}`,
@@ -338,7 +352,7 @@ function finalizeTransferOrder() {
     textColor: 'dark',
     classes: 'luxury-toast',
     icon: 'check_circle',
-    timeout: 3000
+    timeout: 3000,
   })
 }
 </script>
@@ -409,7 +423,7 @@ function finalizeTransferOrder() {
 .summary-items {
   max-height: 300px;
   overflow-y: auto;
-  
+
   .item-thumb {
     width: 60px;
     height: 60px;
@@ -567,17 +581,17 @@ function finalizeTransferOrder() {
     cursor: pointer;
     outline: none;
     transition: all 0.25s ease;
-    
+
     .bank-name {
       font-size: 12px;
       font-weight: 600;
       color: #666666;
     }
-    
+
     &:hover {
       border-color: rgba(180, 127, 96, 0.3);
     }
-    
+
     &.active {
       background: #f7f2ee;
       border-color: #b47f60;
@@ -592,13 +606,13 @@ function finalizeTransferOrder() {
   background-color: #fcfbfa;
   border-radius: 16px;
   border: 1px solid rgba(180, 127, 96, 0.1);
-  
+
   .bank-field {
     border-bottom: 1px dashed rgba(180, 127, 96, 0.1);
     &:last-child {
       border-bottom: none;
     }
-    
+
     .field-label {
       font-size: 8px;
       letter-spacing: 1px;
@@ -611,7 +625,7 @@ function finalizeTransferOrder() {
       color: #333333;
       font-weight: 600;
     }
-    
+
     .copy-btn {
       color: #999999;
       &:hover {
@@ -625,7 +639,7 @@ function finalizeTransferOrder() {
   background: rgba(180, 127, 96, 0.04);
   border-radius: 12px;
   border: 1px dashed rgba(180, 127, 96, 0.15);
-  
+
   .notice-text {
     font-size: 10px;
     color: #666666;

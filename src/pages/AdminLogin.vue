@@ -14,7 +14,8 @@
         <!-- Form -->
         <q-form @submit.prevent="handleLogin" class="login-form flex flex-column gap-4">
           <p class="login-instructions text-center text-muted">
-            Introduce tus credenciales exclusivas de administrador para acceder al inventario de piezas extraordinarias.
+            Introduce tus credenciales exclusivas de administrador para acceder al inventario de
+            piezas extraordinarias.
           </p>
 
           <div class="flex flex-column gap-3">
@@ -27,7 +28,7 @@
               bg-color="white"
               dense
               class="custom-input"
-              :rules="[val => !!val || 'El correo electrónico es requerido']"
+              :rules="[(val) => !!val || 'El correo electrónico es requerido']"
             />
 
             <q-input
@@ -39,7 +40,7 @@
               bg-color="white"
               dense
               class="custom-input"
-              :rules="[val => !!val || 'La contraseña es requerida']"
+              :rules="[(val) => !!val || 'La contraseña es requerida']"
             />
           </div>
 
@@ -76,12 +77,12 @@ async function handleLogin() {
   try {
     const response = await api.post('/admin-login', {
       email: email.value,
-      password: password.value
+      password: password.value,
     })
-    
+
     if (response.data && response.data.status === 'success') {
       localStorage.setItem('ji_admin_token', response.data.admin_token)
-      
+
       $q.notify({
         message: 'Acceso Autorizado',
         caption: `Bienvenido, administrador ${response.data.admin?.nombre || email.value}`,
@@ -89,15 +90,16 @@ async function handleLogin() {
         textColor: 'dark',
         classes: 'luxury-toast',
         icon: 'verified',
-        timeout: 2000
+        timeout: 2000,
       })
-      
+
       router.push('/admin/productos')
     } else {
       throw new Error(response.data?.message || 'Credenciales inválidas.')
     }
   } catch (error) {
-    const errorMsg = error.response?.data?.message || error.message || 'Error de conexión con el servidor.'
+    const errorMsg =
+      error.response?.data?.message || error.message || 'Error de conexión con el servidor.'
     $q.notify({
       message: 'Acceso Denegado',
       caption: errorMsg,
@@ -105,7 +107,7 @@ async function handleLogin() {
       textColor: 'dark',
       classes: 'luxury-toast',
       icon: 'error_outline',
-      timeout: 3000
+      timeout: 3000,
     })
   } finally {
     loading.value = false

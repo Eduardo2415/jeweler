@@ -120,8 +120,17 @@
     <q-dialog v-model="productDialogOpen" persistent backdrop-filter="blur(10px)">
       <q-card class="create-card q-pa-lg font-sans">
         <div class="dialog-header flex items-center justify-between q-mb-md">
-          <h3 class="dialog-title font-serif">{{ isEditing ? 'Editar Pieza' : 'Añadir Nueva Pieza' }}</h3>
-          <q-btn flat round dense icon="close" class="close-btn" @click="productDialogOpen = false" />
+          <h3 class="dialog-title font-serif">
+            {{ isEditing ? 'Editar Pieza' : 'Añadir Nueva Pieza' }}
+          </h3>
+          <q-btn
+            flat
+            round
+            dense
+            icon="close"
+            class="close-btn"
+            @click="productDialogOpen = false"
+          />
         </div>
 
         <q-form @submit.prevent="submitProduct" class="create-form flex flex-column gap-3">
@@ -131,7 +140,7 @@
             label="Nombre de la Joya"
             color="accent"
             dense
-            :rules="[val => !!val || 'El nombre es obligatorio']"
+            :rules="[(val) => !!val || 'El nombre es obligatorio']"
           />
 
           <div class="row gap-3">
@@ -145,7 +154,7 @@
               map-options
               dense
               class="col"
-              :rules="[val => !!val || 'La categoría es obligatoria']"
+              :rules="[(val) => !!val || 'La categoría es obligatoria']"
             />
             <q-input
               v-model.number="newProduct.price"
@@ -156,8 +165,8 @@
               dense
               class="col"
               :rules="[
-                val => !!val || 'El precio es obligatorio',
-                val => val > 0 || 'El precio debe ser mayor a 0'
+                (val) => !!val || 'El precio es obligatorio',
+                (val) => val > 0 || 'El precio debe ser mayor a 0',
               ]"
             />
           </div>
@@ -172,8 +181,12 @@
             dense
             clearable
             :rules="[
-              val => val === null || val === '' || val > 0 || 'La oferta debe ser mayor a 0',
-              val => val === null || val === '' || val < newProduct.price || 'La oferta debe ser menor que el precio regular'
+              (val) => val === null || val === '' || val > 0 || 'La oferta debe ser mayor a 0',
+              (val) =>
+                val === null ||
+                val === '' ||
+                val < newProduct.price ||
+                'La oferta debe ser menor que el precio regular',
             ]"
           />
 
@@ -186,8 +199,8 @@
             color="accent"
             dense
             :rules="[
-              val => Number.isInteger(val) || 'La cantidad debe ser un número entero',
-              val => val >= 0 || 'La cantidad no puede ser negativa'
+              (val) => Number.isInteger(val) || 'La cantidad debe ser un número entero',
+              (val) => val >= 0 || 'La cantidad no puede ser negativa',
             ]"
           />
 
@@ -199,13 +212,13 @@
             color="accent"
             dense
             rows="3"
-            :rules="[val => !!val || 'La descripción es obligatoria']"
+            :rules="[(val) => !!val || 'La descripción es obligatoria']"
           />
 
           <!-- Photo Uploader ready for MinIO -->
           <div class="uploader-section flex flex-column gap-2">
             <span class="uploader-label">Imagen del Producto</span>
-            
+
             <q-uploader
               ref="uploaderRef"
               flat
@@ -267,14 +280,14 @@ const newProduct = ref({
   sale_price: null,
   stock: 0,
   description: '',
-  image: ''
+  image: '',
 })
 
 const initialPagination = {
   sortBy: 'desc',
   descending: false,
   page: 1,
-  rowsPerPage: 10
+  rowsPerPage: 10,
 }
 
 const columns = [
@@ -285,7 +298,7 @@ const columns = [
   { name: 'sale-price', label: 'Oferta', align: 'left', field: 'sale_price', sortable: true },
   { name: 'stock', label: 'Stock', align: 'left', field: 'stock', sortable: true },
   { name: 'rating', label: 'Valoración', align: 'left', field: 'rating', sortable: true },
-  { name: 'actions', label: 'Acciones', align: 'right' }
+  { name: 'actions', label: 'Acciones', align: 'right' },
 ]
 
 const categoryOptions = [
@@ -294,19 +307,19 @@ const categoryOptions = [
   { label: 'Relojes', value: 3 },
   { label: 'Pulseras', value: 4 },
   { label: 'Pendientes', value: 5 },
-  { label: 'Collares', value: 6 }
+  { label: 'Collares', value: 6 },
 ]
 
 function formatPrice(value) {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
-    maximumFractionDigits: 0
+    maximumFractionDigits: 0,
   }).format(value)
 }
 
 function getCategoryName(categoryId) {
-  const opt = categoryOptions.find(c => c.value === categoryId)
+  const opt = categoryOptions.find((c) => c.value === categoryId)
   return opt ? opt.label : 'General'
 }
 
@@ -320,7 +333,7 @@ function openCreateDialog() {
     sale_price: null,
     stock: 0,
     description: '',
-    image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400&h=400&fit=crop'
+    image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400&h=400&fit=crop',
   }
   productDialogOpen.value = true
 }
@@ -335,7 +348,7 @@ function openEditDialog(product) {
     sale_price: product.sale_price,
     stock: product.stock,
     description: product.description,
-    image: product.image
+    image: product.image,
   }
   productDialogOpen.value = true
 }
@@ -353,29 +366,36 @@ function onFileAdded(files) {
 
 function onFileRemoved() {
   selectedFile.value = null
-  newProduct.value.image = 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400&h=400&fit=crop'
+  newProduct.value.image =
+    'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400&h=400&fit=crop'
 }
 
 async function submitProduct() {
-  let uploadedImageUrl = newProduct.value.image || 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400&h=400&fit=crop'
-  
+  let uploadedImageUrl =
+    newProduct.value.image ||
+    'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400&h=400&fit=crop'
+
   if (selectedFile.value) {
     $q.loading.show({ message: 'Subiendo imagen a MinIO (vía n8n)...' })
     try {
       const formData = new FormData()
       formData.append('file', selectedFile.value)
-      
+      formData.append('folder', 'productos')
+
       const uploadResponse = await api.post('/upload-image', formData, {
         headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+          'Content-Type': 'multipart/form-data',
+        },
       })
-      
+
       if (uploadResponse.data && uploadResponse.data.url) {
         uploadedImageUrl = uploadResponse.data.url
       }
     } catch (error) {
-      console.warn('⚠️ Error de subida a n8n, se utilizará base64 local en prototipo:', error.message)
+      console.warn(
+        '⚠️ Error de subida a n8n, se utilizará base64 local en prototipo:',
+        error.message,
+      )
       // Fallback to local Base64 preview
       uploadedImageUrl = newProduct.value.image
     } finally {
@@ -394,16 +414,16 @@ async function submitProduct() {
       sale_price: newProduct.value.sale_price || null,
       stock: newProduct.value.stock,
       description: newProduct.value.description,
-      image: uploadedImageUrl
+      image: uploadedImageUrl,
     }
 
     const endpoint = isEditing.value ? '/update-product' : '/create-product'
     const response = await api.post(endpoint, productData)
-    
+
     // Check response from n8n
     if (response.data?.status === 'success') {
       await store.fetchProducts()
-      
+
       $q.notify({
         message: isEditing.value ? 'Producto Actualizado' : 'Producto Incorporado',
         caption: isEditing.value
@@ -413,7 +433,7 @@ async function submitProduct() {
         textColor: 'dark',
         classes: 'luxury-toast',
         icon: 'check_circle',
-        timeout: 3000
+        timeout: 3000,
       })
       productDialogOpen.value = false
       editingProductId.value = null
@@ -427,7 +447,7 @@ async function submitProduct() {
       color: 'negative',
       textColor: 'white',
       icon: 'error_outline',
-      timeout: 3500
+      timeout: 3500,
     })
   } finally {
     $q.loading.hide()
@@ -442,11 +462,11 @@ function editStock(product) {
       model: String(product.stock ?? 0),
       type: 'number',
       min: 0,
-      step: 1
+      step: 1,
     },
     cancel: true,
-    persistent: true
-  }).onOk(async value => {
+    persistent: true,
+  }).onOk(async (value) => {
     const stock = Number(value)
 
     if (!Number.isInteger(stock) || stock < 0) {
@@ -454,7 +474,7 @@ function editStock(product) {
         message: 'Cantidad inválida',
         caption: 'El stock debe ser un número entero mayor o igual a cero.',
         color: 'negative',
-        textColor: 'white'
+        textColor: 'white',
       })
       return
     }
@@ -464,7 +484,7 @@ function editStock(product) {
       const response = await api.post('/update-product-stock', {
         admin_token: localStorage.getItem('ji_admin_token'),
         product_id: product.id,
-        stock
+        stock,
       })
 
       if (response.data?.status !== 'success') {
@@ -477,7 +497,7 @@ function editStock(product) {
         caption: `${product.name}: ${stock} unidades disponibles.`,
         color: 'positive',
         textColor: 'white',
-        icon: 'inventory_2'
+        icon: 'inventory_2',
       })
     } catch (error) {
       $q.notify({
@@ -485,14 +505,13 @@ function editStock(product) {
         caption: error.response?.data?.message || error.message,
         color: 'negative',
         textColor: 'white',
-        icon: 'error_outline'
+        icon: 'error_outline',
       })
     } finally {
       $q.loading.hide()
     }
   })
 }
-
 
 function deleteProduct(productId) {
   $q.dialog({
@@ -501,21 +520,21 @@ function deleteProduct(productId) {
     cancel: {
       flat: true,
       color: 'dark',
-      label: 'Cancelar'
+      label: 'Cancelar',
     },
     ok: {
       unelevated: true,
       color: 'accent',
-      label: 'Eliminar'
+      label: 'Eliminar',
     },
-    persistent: true
+    persistent: true,
   }).onOk(async () => {
     $q.loading.show({ message: 'Retirando pieza del catálogo...' })
 
     try {
       const response = await api.post('/delete-product', {
         admin_token: localStorage.getItem('ji_admin_token'),
-        product_id: productId
+        product_id: productId,
       })
 
       if (response.data?.status !== 'success') {
@@ -531,7 +550,7 @@ function deleteProduct(productId) {
         textColor: 'dark',
         classes: 'luxury-toast',
         icon: 'delete',
-        timeout: 2000
+        timeout: 2000,
       })
     } catch (error) {
       $q.notify({
@@ -540,7 +559,7 @@ function deleteProduct(productId) {
         color: 'negative',
         textColor: 'white',
         icon: 'error_outline',
-        timeout: 3500
+        timeout: 3500,
       })
     } finally {
       $q.loading.hide()
@@ -605,14 +624,14 @@ function deleteProduct(productId) {
     letter-spacing: 1.5px;
     padding: 16px !important;
   }
-  
+
   ::v-deep(td) {
     font-size: 14px !important;
     color: #333333 !important;
     border-bottom: 1px dashed rgba(180, 127, 96, 0.08) !important;
     padding: 16px !important;
   }
-  
+
   ::v-deep(tr:last-child td) {
     border-bottom: none !important;
   }
@@ -698,7 +717,7 @@ function deleteProduct(productId) {
     border: 1px solid rgba(180, 127, 96, 0.2);
     overflow: hidden;
     background-color: #ffffff;
-    
+
     ::v-deep(.q-uploader__header) {
       background-color: #f7f2ee;
       color: #333333;

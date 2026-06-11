@@ -14,7 +14,7 @@ async function readTestUser() {
   try {
     const client = axios.create({
       baseURL: DIRECTUS_URL,
-      headers: { Authorization: `Bearer ${DIRECTUS_ADMIN_TOKEN}` }
+      headers: { Authorization: `Bearer ${DIRECTUS_ADMIN_TOKEN}` },
     })
 
     console.log('Reading test user...')

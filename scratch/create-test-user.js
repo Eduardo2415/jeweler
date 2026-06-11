@@ -14,16 +14,16 @@ async function createTestUser() {
   try {
     const client = axios.create({
       baseURL: DIRECTUS_URL,
-      headers: { Authorization: `Bearer ${DIRECTUS_ADMIN_TOKEN}` }
+      headers: { Authorization: `Bearer ${DIRECTUS_ADMIN_TOKEN}` },
     })
 
     console.log('Checking if test user already exists...')
     const checkRes = await client.get('items/ji_usuarios_admin', {
       params: {
         filter: {
-          email: { _eq: 'eduardomartinez0215@hotmail.com' }
-        }
-      }
+          email: { _eq: 'eduardomartinez0215@hotmail.com' },
+        },
+      },
     })
 
     if (checkRes.data.data && checkRes.data.data.length > 0) {
@@ -36,7 +36,7 @@ async function createTestUser() {
       nombre: 'Eduardo Martínez',
       email: 'eduardomartinez0215@hotmail.com',
       password: 'elm141595',
-      estado_activo: true
+      estado_activo: true,
     })
     console.log('✅ Test user created successfully!')
     console.log('Record details:', response.data.data)

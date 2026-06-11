@@ -9,7 +9,8 @@
           </div>
           <h3 class="brand-title font-serif">JUAN INVERSIONES</h3>
           <p class="muted font-sans text-center text-md-left">
-            Joyas exclusivas y relojería de ultra-lujo. Diseños eternos con el brillo de la perfección.
+            Joyas exclusivas y relojería de ultra-lujo. Diseños eternos con el brillo de la
+            perfección.
           </p>
         </div>
 
@@ -18,7 +19,9 @@
           <h4 class="col-title font-sans">Colecciones</h4>
           <ul>
             <li v-for="item in shopLinks" :key="item.value">
-              <a href="#" class="footer-link" @click.prevent="selectCategory(item.value)">{{ item.name }}</a>
+              <a href="#" class="footer-link" @click.prevent="selectCategory(item.value)">{{
+                item.name
+              }}</a>
             </li>
           </ul>
         </div>
@@ -38,10 +41,20 @@
           <h4 class="col-title font-sans">Atención Exclusiva</h4>
           <p class="muted font-sans q-mb-md">Visítanos en nuestro showroom con cita previa.</p>
           <div class="socials flex gap-3">
-            <a href="https://instagram.com" target="_blank" class="social-btn" aria-label="Instagram">
+            <a
+              href="https://instagram.com"
+              target="_blank"
+              class="social-btn"
+              aria-label="Instagram"
+            >
               <q-icon name="camera_alt" size="18px" />
             </a>
-            <a href="https://wa.me/5491112345678" target="_blank" class="social-btn" aria-label="WhatsApp">
+            <a
+              href="https://wa.me/5491112345678"
+              target="_blank"
+              class="social-btn"
+              aria-label="WhatsApp"
+            >
               <q-icon name="whatsapp" size="18px" />
             </a>
             <a href="mailto:info@juaninversiones.com" class="social-btn" aria-label="Email">
@@ -54,7 +67,9 @@
       <div class="divider q-my-md" />
 
       <div class="footer-bottom flex justify-between items-center wrap gap-3">
-        <div class="copyright font-sans">© 2026 JUAN INVERSIONES. Todos los derechos reservados.</div>
+        <div class="copyright font-sans">
+          © 2026 JUAN INVERSIONES. Todos los derechos reservados.
+        </div>
         <div class="legal-links flex gap-4 font-sans">
           <a href="#" class="footer-link-sub">Términos de Servicio</a>
           <a href="#" class="footer-link-sub">Política de Privacidad</a>
@@ -73,14 +88,14 @@ const shopLinks = [
   { name: 'Anillos', value: 'Rings' },
   { name: 'Cadenas', value: 'Chains' },
   { name: 'Brazaletes', value: 'Bracelets' },
-  { name: 'Aretes', value: 'Earrings' }
+  { name: 'Aretes', value: 'Earrings' },
 ]
 
 const companyLinks = [
   { name: 'Nuestra Historia' },
   { name: 'Contacto Directo' },
   { name: 'Showrooms' },
-  { name: 'Preguntas Frecuentes' }
+  { name: 'Preguntas Frecuentes' },
 ]
 
 function selectCategory(categoryValue) {

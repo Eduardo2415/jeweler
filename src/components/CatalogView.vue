@@ -16,12 +16,56 @@
       </div>
       <q-btn flat round class="cart-trigger-btn" @click="$emit('open-cart')">
         <q-icon name="shopping_bag" size="20px" />
-        <q-badge color="accent" floating rounded v-if="cartCount" class="custom-cart-badge" :class="{ 'badge-pulse': animateBadge }">{{ cartCount }}</q-badge>
+        <q-badge
+          color="accent"
+          floating
+          rounded
+          v-if="cartCount"
+          class="custom-cart-badge"
+          :class="{ 'badge-pulse': animateBadge }"
+          >{{ cartCount }}</q-badge
+        >
       </q-btn>
     </header>
 
-    <!-- Hero banner full-bleed -->
-    <section class="hero">
+    <!-- Hero banner carrusel dinámico -->
+    <q-carousel
+      v-if="store.banners && store.banners.length > 0"
+      animated
+      v-model="slide"
+      navigation
+      infinite
+      :autoplay="store.bannerInterval"
+      arrows
+      transition-prev="slide-right"
+      transition-next="slide-left"
+      class="hero-carousel"
+    >
+      <q-carousel-slide
+        v-for="(banner, idx) in store.banners"
+        :key="banner.id"
+        :name="idx"
+        class="hero-slide"
+        :style="{ backgroundImage: `url(${banner.image})` }"
+      >
+        <div class="hero-overlay"></div>
+        <div class="hero-copy">
+          <div class="eyebrow">{{ banner.eyebrow || 'Colección' }}</div>
+          <h2 class="hero-title font-serif">{{ banner.title }}</h2>
+          <p class="hero-sub font-sans">{{ banner.subtitle }}</p>
+          <q-btn
+            v-if="banner.button_text"
+            unelevated
+            class="cta font-sans"
+            :label="banner.button_text"
+            @click="onBannerClick(banner)"
+          />
+        </div>
+      </q-carousel-slide>
+    </q-carousel>
+
+    <!-- Fallback si no hay banners cargados -->
+    <section v-else class="hero">
       <ImageWithFallback
         src="https://images.unsplash.com/photo-1727784892009-f3cf06199b65?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1600"
         class-name="hero-img"
@@ -31,7 +75,7 @@
           <div class="eyebrow">Colección</div>
           <h2 class="hero-title">RADIANT DIAMOND LAWMI JEWELRY SET</h2>
           <p class="hero-sub">Timeless elegance with a brilliant, modern glow</p>
-          <button class="cta">Ver Colección ›</button>
+          <button class="cta" @click="$emit('update:activeCategory', 'Rings')">Ver Colección ›</button>
         </div>
       </div>
     </section>
@@ -46,7 +90,10 @@
             class="cat-item"
             @click="$emit('update:activeCategory', cat.value)"
           >
-            <ImageWithFallback :src="cat.image" :class-name="'cat-img' + (activeCategory === cat.value ? ' active' : '')" />
+            <ImageWithFallback
+              :src="cat.image"
+              :class-name="'cat-img' + (activeCategory === cat.value ? ' active' : '')"
+            />
             <div :class="['cat-label', { active: activeCategory === cat.value }]">
               {{ cat.name }}
             </div>
@@ -74,19 +121,48 @@
               <h3 class="p-name">{{ product.name }}</h3>
               <div class="row-between">
                 <div class="price-wrap">
-                  <div v-if="hasActiveSale(product)" class="regular-price">{{ formatPrice(product.price) }}</div>
+                  <div v-if="hasActiveSale(product)" class="regular-price">
+                    {{ formatPrice(product.price) }}
+                  </div>
                   <div class="price">{{ formatPrice(getEffectivePrice(product)) }}</div>
                 </div>
-                
+
                 <!-- Quantity selector if already in cart -->
-                <div v-if="getProductQuantity(product.id) > 0" class="qty-selector-pill flex items-center justify-between">
-                  <q-btn flat round size="xs" icon="remove" class="qty-btn" @click.stop.prevent="decreaseQuantity(product.id)" />
+                <div
+                  v-if="getProductQuantity(product.id) > 0"
+                  class="qty-selector-pill flex items-center justify-between"
+                >
+                  <q-btn
+                    flat
+                    round
+                    size="xs"
+                    icon="remove"
+                    class="qty-btn"
+                    @click.stop.prevent="decreaseQuantity(product.id)"
+                  />
                   <span class="qty-val">{{ getProductQuantity(product.id) }}</span>
-                  <q-btn flat round size="xs" icon="add" class="qty-btn" :disable="getProductQuantity(product.id) >= product.stock" @click.stop.prevent="increaseQuantity(product)" />
+                  <q-btn
+                    flat
+                    round
+                    size="xs"
+                    icon="add"
+                    class="qty-btn"
+                    :disable="getProductQuantity(product.id) >= product.stock"
+                    @click.stop.prevent="increaseQuantity(product)"
+                  />
                 </div>
-                
+
                 <!-- Add button if not in cart -->
-                <q-btn v-else flat round dense class="add-btn" icon="add" :disable="product.stock <= 0" @click.stop.prevent="addToCart(product)" />
+                <q-btn
+                  v-else
+                  flat
+                  round
+                  dense
+                  class="add-btn"
+                  icon="add"
+                  :disable="product.stock <= 0"
+                  @click.stop.prevent="addToCart(product)"
+                />
               </div>
             </div>
           </article>
@@ -111,6 +187,26 @@ const props = defineProps({
 const emit = defineEmits(['view-product', 'toggle-menu', 'open-cart', 'update:activeCategory'])
 const store = useShopStore()
 const $q = useQuasar()
+
+const slide = ref(0)
+
+function onBannerClick(banner) {
+  if (!banner.button_link) return
+  
+  // Check if link matches a category name or value
+  const matchingCategory = props.categories.find(
+    c => c.value.toLowerCase() === banner.button_link.toLowerCase() ||
+         c.name.toLowerCase() === banner.button_link.toLowerCase()
+  )
+  
+  if (matchingCategory) {
+    emit('update:activeCategory', matchingCategory.value)
+  } else if (banner.button_link.startsWith('http://') || banner.button_link.startsWith('https://')) {
+    window.open(banner.button_link, '_blank')
+  } else {
+    emit('update:activeCategory', banner.button_link)
+  }
+}
 
 const favorites = ref(new Set())
 const animateBadge = ref(false)
@@ -152,46 +248,51 @@ const products = ref([
 ])
 
 // Watch cart length changes to pulse the badge
-watch(() => store.cart.length, (newVal, oldVal) => {
-  if (newVal > oldVal) {
-    animateBadge.value = true
-    setTimeout(() => {
-      animateBadge.value = false
-    }, 350)
-  }
-})
+watch(
+  () => store.cart.length,
+  (newVal, oldVal) => {
+    if (newVal > oldVal) {
+      animateBadge.value = true
+      setTimeout(() => {
+        animateBadge.value = false
+      }, 350)
+    }
+  },
+)
 
 const cartCount = computed(() => store.cart.length)
 
 const filteredProducts = computed(() => {
-  const catalogList = (store.products && store.products.length > 0) ? store.products : products.value
+  const catalogList = store.products && store.products.length > 0 ? store.products : products.value
   const activeCat = props.activeCategory
   if (!activeCat) return catalogList
 
   const categoryMap = {
-    'Rings': 1,
-    'Chains': 2,
-    'Relojes': 3,
-    'Bracelets': 4,
-    'Earrings': 5,
-    'Collares': 6,
-    'Compromiso': 6
+    Rings: 1,
+    Chains: 2,
+    Relojes: 3,
+    Bracelets: 4,
+    Earrings: 5,
+    Collares: 6,
+    Compromiso: 6,
   }
   const numericId = categoryMap[activeCat]
 
   return catalogList.filter((p) => {
-    const matchesString = p.category && typeof p.category === 'string' && p.category.toLowerCase() === activeCat.toLowerCase()
+    const matchesString =
+      p.category &&
+      typeof p.category === 'string' &&
+      p.category.toLowerCase() === activeCat.toLowerCase()
     const matchesId = p.categoryId !== undefined && p.categoryId === numericId
     return matchesString || matchesId
   })
 })
 
-
 function formatPrice(value) {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
-    maximumFractionDigits: 0
+    maximumFractionDigits: 0,
   }).format(value)
 }
 
@@ -229,17 +330,20 @@ function addToCart(product) {
     position: 'bottom-right',
     timeout: 1800,
     classes: 'luxury-toast',
-    icon: 'check_circle'
+    icon: 'check_circle',
   })
 }
 
 function notifyStockLimit(product) {
   $q.notify({
     message: product.stock > 0 ? 'Stock máximo alcanzado' : 'Producto agotado',
-    caption: product.stock > 0 ? `Solo hay ${product.stock} unidades disponibles.` : 'Esta pieza no tiene unidades disponibles.',
+    caption:
+      product.stock > 0
+        ? `Solo hay ${product.stock} unidades disponibles.`
+        : 'Esta pieza no tiene unidades disponibles.',
     color: 'negative',
     textColor: 'white',
-    icon: 'inventory_2'
+    icon: 'inventory_2',
   })
 }
 
@@ -358,7 +462,35 @@ function open(product) {
   border-radius: 10px;
 }
 
-/* Hero — mobile: bottom-rounded; desktop: fully rounded with slight top margin */
+/* Hero & Carousel Styles */
+.hero-carousel {
+  position: relative;
+  height: 420px;
+  border-radius: 0 0 24px 24px;
+  background-color: #f7f2ee;
+  overflow: hidden;
+}
+.hero-carousel ::v-deep(.q-carousel__control) {
+  z-index: 10 !important;
+}
+.hero-carousel ::v-deep(.q-carousel__arrow) {
+  z-index: 10 !important;
+}
+.hero-carousel ::v-deep(.q-carousel__navigation) {
+  z-index: 10 !important;
+}
+.hero-slide {
+  padding: 0;
+  position: relative;
+  background-size: cover;
+  background-position: center;
+}
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.55));
+  z-index: 1;
+}
 .hero {
   position: relative;
   height: 420px;
@@ -373,29 +505,47 @@ function open(product) {
 .hero-copy {
   position: absolute;
   left: 24px;
-  top: 40%;
+  bottom: 40px; /* Aligned from bottom for better fit */
   color: white;
   max-width: 520px;
+  z-index: 2;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 .eyebrow {
   text-transform: uppercase;
   letter-spacing: 0.12em;
   font-size: 12px;
+  font-weight: 600;
 }
 .hero-title {
   font-family: 'Playfair Display', serif;
   font-size: 28px;
   margin: 8px 0;
+  line-height: 1.2;
 }
 .hero-sub {
   margin-bottom: 16px;
+  font-size: 13px;
+  opacity: 0.95;
+  line-height: 1.4;
 }
 .cta {
-  background: #b47f60;
-  color: white;
+  background: #b47f60 !important;
+  color: white !important;
   border-radius: 24px;
-  padding: 10px 16px;
+  padding: 10px 24px;
   border: 0;
+  text-transform: none;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(180, 127, 96, 0.25);
+  transition: all 0.3s ease;
+  font-size: 13px;
+  &:hover {
+    background: #ffffff !important;
+    color: #b47f60 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 255, 255, 0.15);
+  }
 }
 
 /* Categories and grid respect the root padding; container inside catalog-root removes its extra horizontal padding */
@@ -551,7 +701,7 @@ function open(product) {
   .grid {
     grid-template-columns: repeat(4, 1fr);
   }
-  .hero {
+  .hero, .hero-carousel {
     height: 500px;
     border-radius: 24px;
     margin-top: 16px;
