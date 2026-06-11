@@ -67,22 +67,26 @@
           >
             <div class="img-wrap">
               <ImageWithFallback :src="product.image" :alt="product.name" class-name="prod-img" />
+              <q-badge v-if="product.stock <= 0" class="stock-badge" color="dark">Agotado</q-badge>
               <button class="fav" @click.stop="toggleFavorite(product.id)">❤</button>
             </div>
             <div class="info">
               <h3 class="p-name">{{ product.name }}</h3>
               <div class="row-between">
-                <div class="price">{{ formatPrice(product.price) }}</div>
+                <div class="price-wrap">
+                  <div v-if="hasActiveSale(product)" class="regular-price">{{ formatPrice(product.price) }}</div>
+                  <div class="price">{{ formatPrice(getEffectivePrice(product)) }}</div>
+                </div>
                 
                 <!-- Quantity selector if already in cart -->
                 <div v-if="getProductQuantity(product.id) > 0" class="qty-selector-pill flex items-center justify-between">
                   <q-btn flat round size="xs" icon="remove" class="qty-btn" @click.stop.prevent="decreaseQuantity(product.id)" />
                   <span class="qty-val">{{ getProductQuantity(product.id) }}</span>
-                  <q-btn flat round size="xs" icon="add" class="qty-btn" @click.stop.prevent="increaseQuantity(product)" />
+                  <q-btn flat round size="xs" icon="add" class="qty-btn" :disable="getProductQuantity(product.id) >= product.stock" @click.stop.prevent="increaseQuantity(product)" />
                 </div>
                 
                 <!-- Add button if not in cart -->
-                <q-btn v-else flat round dense class="add-btn" icon="add" @click.stop.prevent="addToCart(product)" />
+                <q-btn v-else flat round dense class="add-btn" icon="add" :disable="product.stock <= 0" @click.stop.prevent="addToCart(product)" />
               </div>
             </div>
           </article>
@@ -97,6 +101,7 @@ import { ref, computed, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { useShopStore } from '../stores/shop'
 import ImageWithFallback from './ImageWithFallback.vue'
+import { getEffectivePrice, hasActiveSale } from '../utils/pricing'
 
 const props = defineProps({
   categories: { type: Array, required: true },
@@ -196,7 +201,9 @@ function getProductQuantity(productId) {
 }
 
 function increaseQuantity(product) {
-  store.addToCart(product, 1)
+  if (!store.addToCart(product, 1)) {
+    notifyStockLimit(product)
+  }
 }
 
 function decreaseQuantity(productId) {
@@ -212,7 +219,10 @@ function toggleFavorite(id) {
 }
 
 function addToCart(product) {
-  store.addToCart(product, 1)
+  if (!store.addToCart(product, 1)) {
+    notifyStockLimit(product)
+    return
+  }
   $q.notify({
     message: 'Pieza agregada al carrito',
     caption: `${product.name} ha sido añadida.`,
@@ -220,6 +230,16 @@ function addToCart(product) {
     timeout: 1800,
     classes: 'luxury-toast',
     icon: 'check_circle'
+  })
+}
+
+function notifyStockLimit(product) {
+  $q.notify({
+    message: product.stock > 0 ? 'Stock máximo alcanzado' : 'Producto agotado',
+    caption: product.stock > 0 ? `Solo hay ${product.stock} unidades disponibles.` : 'Esta pieza no tiene unidades disponibles.',
+    color: 'negative',
+    textColor: 'white',
+    icon: 'inventory_2'
   })
 }
 
@@ -473,6 +493,12 @@ function open(product) {
   border-radius: 10px;
   border: 0;
 }
+.stock-badge {
+  left: 10px;
+  position: absolute;
+  top: 10px;
+  z-index: 2;
+}
 .info {
   padding: 12px;
 }
@@ -489,6 +515,15 @@ function open(product) {
 .price {
   color: #b47f60;
   font-weight: 700;
+}
+.price-wrap {
+  display: flex;
+  flex-direction: column;
+}
+.regular-price {
+  color: #999999;
+  font-size: 12px;
+  text-decoration: line-through;
 }
 .add-btn {
   background-color: #f7f2ee;

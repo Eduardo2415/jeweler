@@ -40,6 +40,30 @@
       }
     },
     {
+      "field": "sale_price",
+      "type": "integer",
+      "meta": {
+        "interface": "input",
+        "note": "Precio opcional de oferta. Debe ser mayor que cero y menor que el precio regular."
+      },
+      "schema": {
+        "is_nullable": true
+      }
+    },
+    {
+      "field": "stock",
+      "type": "integer",
+      "meta": {
+        "interface": "input",
+        "required": true,
+        "note": "Cantidad de unidades disponibles para venta."
+      },
+      "schema": {
+        "default_value": 0,
+        "is_nullable": false
+      }
+    },
+    {
       "field": "description",
       "type": "text",
       "meta": {

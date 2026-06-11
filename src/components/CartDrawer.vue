@@ -75,7 +75,7 @@
                 <div class="qty-control flex items-center">
                   <q-btn flat round size="xs" icon="remove" class="qty-btn" @click="decreaseQty(item.id)" />
                   <span class="qty-val">{{ item.quantity }}</span>
-                  <q-btn flat round size="xs" icon="add" class="qty-btn" @click="increaseQty(item.id)" />
+                  <q-btn flat round size="xs" icon="add" class="qty-btn" :disable="item.quantity >= item.stock" @click="increaseQty(item.id)" />
                 </div>
               </div>
             </div>

@@ -1,19 +1,19 @@
 // app global css in SCSS form
 
-// Paleta de colores elegante para joyería
+// Paleta premium de Juan Inversiones
 :root {
-  --color-primary: #1a1a1a;
-  --color-secondary: #d4af37; // Dorado elegante
-  --color-accent: #c0c0c0; // Plata
-  --color-light: #f5f5f5;
-  --color-dark: #0a0a0a;
+  --color-primary: #333333;
+  --color-secondary: #f7f2ee;
+  --color-accent: #b47f60;
+  --color-light: #ffffff;
+  --color-dark: #1a1a1a;
 }
 
-// Fuentes elegantes
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Lora:wght@400;500;600&display=swap');
+// Tipografía oficial
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap');
 
 * {
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 
 h1,
@@ -22,14 +22,14 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: 'Lora', serif;
+  font-family: 'Playfair Display', serif;
   letter-spacing: 0.5px;
 }
 
 // Estilos globales
 body {
-  background-color: #fafafa;
-  color: #1a1a1a;
+  background-color: #f7f2ee;
+  color: #333333;
 }
 
 // Scrollbar elegante
@@ -90,12 +90,12 @@ body {
 
 // Links elegantes
 a {
-  color: #1a1a1a;
+  color: #333333;
   text-decoration: none;
   transition: color 0.2s ease;
 
   &:hover {
-    color: #d4af37;
+    color: #b47f60;
   }
 }
 
@@ -109,16 +109,16 @@ hr {
 
 // Clases de utilidad
 .text-elegant {
-  font-family: 'Lora', serif;
+  font-family: 'Playfair Display', serif;
   letter-spacing: 1px;
 }
 
 .gold-accent {
-  color: #d4af37;
+  color: #b47f60;
 }
 
 .silver-accent {
-  color: #c0c0c0;
+  color: #8f6852;
 }
 
 // Transiciones suaves
@@ -170,4 +170,3 @@ hr {
     transform: scale(1);
   }
 }
-

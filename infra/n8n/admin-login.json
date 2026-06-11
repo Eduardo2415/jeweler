@@ -19,7 +19,7 @@
     },
     {
       "parameters": {
-        "url": "={{ $env.DIRECTUS_URL }}/items/ji_usuarios_admin",
+        "url": "http://directus-dpfk3eo6bvn57ljy7z0vlsek:8055/items/ji_usuarios_admin",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBearerAuth",
         "sendQuery": true,
@@ -102,7 +102,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.DIRECTUS_URL }}/items/ji_sesiones_admin",
+        "url": "http://directus-dpfk3eo6bvn57ljy7z0vlsek:8055/items/ji_sesiones_admin",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBearerAuth",
         "sendBody": true,

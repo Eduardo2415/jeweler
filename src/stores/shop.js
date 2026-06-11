@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import api from '../services/api'
+import { getEffectivePrice } from '../utils/pricing'
 
 
 export const useShopStore = defineStore('shop', () => {
@@ -176,15 +177,25 @@ export const useShopStore = defineStore('shop', () => {
   // Actions
   const addToCart = (product, qty = 1) => {
     const existingItem = cart.value.find(item => item.id === product.id)
-    
+    const currentQuantity = existingItem?.quantity || 0
+    const stock = Number(product.stock) || 0
+
+    if (qty <= 0 || currentQuantity + qty > stock) {
+      return false
+    }
+
     if (existingItem) {
       existingItem.quantity += qty
     } else {
       cart.value.push({
         ...product,
+        regular_price: product.price,
+        price: getEffectivePrice(product),
         quantity: qty
       })
     }
+
+    return true
   }
 
   const removeFromCart = (productId) => {
@@ -199,10 +210,14 @@ export const useShopStore = defineStore('shop', () => {
     if (item) {
       if (quantity <= 0) {
         removeFromCart(productId)
-      } else {
+        return true
+      } else if (quantity <= item.stock) {
         item.quantity = quantity
+        return true
       }
     }
+
+    return false
   }
 
   const clearCart = () => {
@@ -255,10 +270,22 @@ export const useShopStore = defineStore('shop', () => {
   const fetchProducts = async () => {
     try {
       const response = await api.get('/get-products')
-      if (response.data && Array.isArray(response.data)) {
-        products.value = response.data
-      } else if (response.data && response.data.products && Array.isArray(response.data.products)) {
-        products.value = response.data.products
+      const responseData = response.data?.data ?? response.data?.products ?? response.data
+
+      if (Array.isArray(responseData)) {
+        products.value = responseData
+        cart.value = cart.value
+          .map(item => {
+            const product = responseData.find(current => current.id === item.id)
+            if (!product || product.stock <= 0) return null
+
+            return {
+              ...item,
+              stock: product.stock,
+              quantity: Math.min(item.quantity, product.stock)
+            }
+          })
+          .filter(Boolean)
       }
     } catch (error) {
       console.warn('⚠️ No se pudo obtener el catálogo de n8n, se mantendrán los productos locales:', error.message)

@@ -31,7 +31,13 @@
           <div class="category-badge">{{ product.category }}</div>
           <h1 class="name font-serif">{{ product.name }}</h1>
           <p class="desc font-sans">{{ product.description }}</p>
-          <div class="price font-serif">{{ formatPrice(product.price) }}</div>
+          <div class="price font-serif">
+            <span v-if="hasActiveSale(product)" class="regular-price">{{ formatPrice(product.price) }}</span>
+            <span>{{ formatPrice(getEffectivePrice(product)) }}</span>
+          </div>
+          <div :class="['stock-status', { empty: product.stock <= 0 }]">
+            {{ product.stock > 0 ? `${product.stock} unidades disponibles` : 'Producto agotado' }}
+          </div>
           
           <!-- Quantity Selector -->
           <div class="qty-select-wrapper flex items-center q-my-lg">
@@ -39,11 +45,11 @@
             <div class="qty-selector-pill flex items-center justify-between">
               <q-btn flat round size="sm" icon="remove" class="qty-btn" @click="decreaseQty" />
               <span class="qty-val">{{ quantity }}</span>
-              <q-btn flat round size="sm" icon="add" class="qty-btn" @click="increaseQty" />
+              <q-btn flat round size="sm" icon="add" class="qty-btn" :disable="quantity >= product.stock" @click="increaseQty" />
             </div>
           </div>
 
-          <q-btn unelevated class="purchase-btn" @click="onAddToCart">
+          <q-btn unelevated class="purchase-btn" :disable="product.stock <= 0" @click="onAddToCart">
             <q-icon name="shopping_bag" class="q-mr-sm" /> Agregar al carrito
           </q-btn>
         </div>
@@ -56,6 +62,7 @@
 import { ref, computed, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { useShopStore } from '../stores/shop'
+import { getEffectivePrice, hasActiveSale } from '../utils/pricing'
 
 const props = defineProps({ product: { type: Object, required: true } })
 const emit = defineEmits(['add-to-cart', 'back', 'toggle-menu', 'open-cart'])
@@ -87,7 +94,9 @@ function formatPrice(value) {
 }
 
 function increaseQty() {
-  quantity.value++
+  if (quantity.value < props.product.stock) {
+    quantity.value++
+  }
 }
 
 function decreaseQty() {
@@ -97,6 +106,20 @@ function decreaseQty() {
 }
 
 function onAddToCart() {
+  if (props.product.stock <= 0) return
+
+  const currentQuantity = store.cart.find(item => item.id === props.product.id)?.quantity || 0
+  if (currentQuantity + quantity.value > props.product.stock) {
+    $q.notify({
+      message: 'Stock insuficiente',
+      caption: `Solo hay ${props.product.stock} unidades disponibles.`,
+      color: 'negative',
+      textColor: 'white',
+      icon: 'inventory_2'
+    })
+    return
+  }
+
   emit('add-to-cart', { product: props.product, qty: quantity.value })
   $q.notify({
     message: 'Pieza agregada al carrito',
@@ -281,11 +304,30 @@ function onAddToCart() {
   margin-bottom: 16px;
 }
 .price {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
   font-size: 28px;
   font-weight: 700;
   color: #b47f60;
   border-top: 1px solid rgba(180, 127, 96, 0.12);
   padding-top: 16px;
+}
+.regular-price {
+  color: #999999;
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  text-decoration: line-through;
+}
+.stock-status {
+  color: #2e7d32;
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 10px;
+}
+.stock-status.empty {
+  color: #9e4f3f;
 }
 
 .qty-select-wrapper {

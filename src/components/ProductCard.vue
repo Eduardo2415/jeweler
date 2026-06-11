@@ -8,7 +8,10 @@
       <div class="row items-start justify-between gap-sm">
         <div>
           <h3 class="product-name">{{ product.name }}</h3>
-          <p class="product-price">${{ formatPrice(product.price) }}</p>
+          <p class="product-price">
+            <span v-if="hasActiveSale(product)" class="regular-price">${{ formatPrice(product.price) }}</span>
+            ${{ formatPrice(getEffectivePrice(product)) }}
+          </p>
         </div>
       </div>
 
@@ -30,7 +33,8 @@
         class="add-btn full-width"
         color="dark"
         text-color="white"
-        label="Añadir al carrito"
+        :label="product.stock > 0 ? 'Añadir al carrito' : 'Agotado'"
+        :disable="product.stock <= 0"
         @click="$emit('add-to-cart', product)"
       />
     </q-card-actions>
@@ -39,6 +43,7 @@
 
 <script setup>
 import ImageWithFallback from './ImageWithFallback.vue'
+import { getEffectivePrice, hasActiveSale } from '../utils/pricing'
 
 defineProps({
   product: {
@@ -93,6 +98,13 @@ const formatPrice = (price) => {
   font-weight: 700;
   color: #111111;
   margin-top: 4px;
+}
+.regular-price {
+  color: #999999;
+  font-size: 0.82rem;
+  font-weight: 500;
+  margin-right: 8px;
+  text-decoration: line-through;
 }
 
 .product-description {

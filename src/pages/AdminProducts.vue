@@ -42,6 +42,23 @@
           </q-td>
         </template>
 
+        <template v-slot:body-cell-sale-price="props">
+          <q-td :props="props">
+            <q-badge v-if="hasActiveSale(props.row)" color="positive" rounded>
+              {{ formatPrice(props.row.sale_price) }}
+            </q-badge>
+            <span v-else class="text-grey-6">Sin oferta</span>
+          </q-td>
+        </template>
+
+        <template v-slot:body-cell-stock="props">
+          <q-td :props="props">
+            <q-badge :color="props.row.stock > 0 ? 'positive' : 'grey-6'" rounded>
+              {{ props.row.stock }} unidades
+            </q-badge>
+          </q-td>
+        </template>
+
         <!-- Custom Category column -->
         <template v-slot:body-cell-category="props">
           <q-td :props="props">
@@ -68,6 +85,26 @@
               flat
               round
               dense
+              icon="edit"
+              class="action-btn-edit"
+              @click="openEditDialog(props.row)"
+            >
+              <q-tooltip class="bg-dark text-white">Editar Producto</q-tooltip>
+            </q-btn>
+            <q-btn
+              flat
+              round
+              dense
+              icon="inventory_2"
+              class="action-btn-stock"
+              @click="editStock(props.row)"
+            >
+              <q-tooltip class="bg-dark text-white">Actualizar Stock</q-tooltip>
+            </q-btn>
+            <q-btn
+              flat
+              round
+              dense
               icon="delete_outline"
               class="action-btn-delete"
               @click="deleteProduct(props.row.id)"
@@ -79,12 +116,12 @@
       </q-table>
     </div>
 
-    <!-- Create Dialog Form -->
-    <q-dialog v-model="createDialogOpen" persistent backdrop-filter="blur(10px)">
+    <!-- Product Dialog Form -->
+    <q-dialog v-model="productDialogOpen" persistent backdrop-filter="blur(10px)">
       <q-card class="create-card q-pa-lg font-sans">
         <div class="dialog-header flex items-center justify-between q-mb-md">
-          <h3 class="dialog-title font-serif">Añadir Nueva Pieza</h3>
-          <q-btn flat round dense icon="close" class="close-btn" @click="createDialogOpen = false" />
+          <h3 class="dialog-title font-serif">{{ isEditing ? 'Editar Pieza' : 'Añadir Nueva Pieza' }}</h3>
+          <q-btn flat round dense icon="close" class="close-btn" @click="productDialogOpen = false" />
         </div>
 
         <q-form @submit.prevent="submitProduct" class="create-form flex flex-column gap-3">
@@ -124,6 +161,35 @@
               ]"
             />
           </div>
+
+          <q-input
+            v-model.number="newProduct.sale_price"
+            type="number"
+            outlined
+            label="Precio de oferta (opcional)"
+            hint="Debe ser menor que el precio regular"
+            color="accent"
+            dense
+            clearable
+            :rules="[
+              val => val === null || val === '' || val > 0 || 'La oferta debe ser mayor a 0',
+              val => val === null || val === '' || val < newProduct.price || 'La oferta debe ser menor que el precio regular'
+            ]"
+          />
+
+          <q-input
+            v-model.number="newProduct.stock"
+            type="number"
+            outlined
+            label="Cantidad disponible"
+            hint="Usa 0 para marcar el producto como agotado"
+            color="accent"
+            dense
+            :rules="[
+              val => Number.isInteger(val) || 'La cantidad debe ser un número entero',
+              val => val >= 0 || 'La cantidad no puede ser negativa'
+            ]"
+          />
 
           <q-input
             v-model="newProduct.description"
@@ -169,7 +235,7 @@
           <q-btn
             unelevated
             class="btn-submit-product q-mt-md"
-            label="Incorporar al Catálogo"
+            :label="isEditing ? 'Guardar Cambios' : 'Incorporar al Catálogo'"
             type="submit"
           />
         </q-form>
@@ -179,22 +245,27 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useQuasar } from 'quasar'
 import { useShopStore } from '../stores/shop'
 import api from '../services/api'
+import { hasActiveSale } from '../utils/pricing'
 
 const store = useShopStore()
 const $q = useQuasar()
 
-const createDialogOpen = ref(false)
+const productDialogOpen = ref(false)
+const editingProductId = ref(null)
 const uploaderRef = ref(null)
 const selectedFile = ref(null)
+const isEditing = computed(() => editingProductId.value !== null)
 
 const newProduct = ref({
   name: '',
   categoryId: null,
   price: null,
+  sale_price: null,
+  stock: 0,
   description: '',
   image: ''
 })
@@ -211,6 +282,8 @@ const columns = [
   { name: 'name', label: 'Nombre', align: 'left', field: 'name', sortable: true },
   { name: 'category', label: 'Categoría', align: 'left', field: 'categoryId', sortable: true },
   { name: 'price', label: 'Precio', align: 'left', field: 'price', sortable: true },
+  { name: 'sale-price', label: 'Oferta', align: 'left', field: 'sale_price', sortable: true },
+  { name: 'stock', label: 'Stock', align: 'left', field: 'stock', sortable: true },
   { name: 'rating', label: 'Valoración', align: 'left', field: 'rating', sortable: true },
   { name: 'actions', label: 'Acciones', align: 'right' }
 ]
@@ -238,15 +311,33 @@ function getCategoryName(categoryId) {
 }
 
 function openCreateDialog() {
+  editingProductId.value = null
   selectedFile.value = null
   newProduct.value = {
     name: '',
     categoryId: 1,
     price: null,
+    sale_price: null,
+    stock: 0,
     description: '',
     image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400&h=400&fit=crop'
   }
-  createDialogOpen.value = true
+  productDialogOpen.value = true
+}
+
+function openEditDialog(product) {
+  editingProductId.value = product.id
+  selectedFile.value = null
+  newProduct.value = {
+    name: product.name,
+    categoryId: product.categoryId,
+    price: product.price,
+    sale_price: product.sale_price,
+    stock: product.stock,
+    description: product.description,
+    image: product.image
+  }
+  productDialogOpen.value = true
 }
 
 function onFileAdded(files) {
@@ -266,7 +357,7 @@ function onFileRemoved() {
 }
 
 async function submitProduct() {
-  let uploadedImageUrl = 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400&h=400&fit=crop'
+  let uploadedImageUrl = newProduct.value.image || 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400&h=400&fit=crop'
   
   if (selectedFile.value) {
     $q.loading.show({ message: 'Subiendo imagen a MinIO (vía n8n)...' })
@@ -295,65 +386,111 @@ async function submitProduct() {
   $q.loading.show({ message: 'Guardando joya en Directus (vía n8n)...' })
   try {
     const productData = {
+      admin_token: localStorage.getItem('ji_admin_token'),
+      product_id: editingProductId.value,
       name: newProduct.value.name,
       categoryId: newProduct.value.categoryId,
       price: newProduct.value.price,
+      sale_price: newProduct.value.sale_price || null,
+      stock: newProduct.value.stock,
       description: newProduct.value.description,
       image: uploadedImageUrl
     }
 
-    const response = await api.post('/create-product', productData)
+    const endpoint = isEditing.value ? '/update-product' : '/create-product'
+    const response = await api.post(endpoint, productData)
     
     // Check response from n8n
-    if (response.data && (response.data.success || response.data.id)) {
-      const newId = response.data.id || Math.floor(Math.random() * 10000)
-      store.products.push({
-        id: newId,
-        ...productData,
-        rating: 5.0
-      })
+    if (response.data?.status === 'success') {
+      await store.fetchProducts()
       
       $q.notify({
-        message: 'Producto Incorporado',
-        caption: `La joya ${newProduct.value.name} ha sido agregada con éxito.`,
+        message: isEditing.value ? 'Producto Actualizado' : 'Producto Incorporado',
+        caption: isEditing.value
+          ? `Los cambios de ${newProduct.value.name} fueron guardados.`
+          : `La joya ${newProduct.value.name} ha sido agregada con éxito.`,
         color: 'white',
         textColor: 'dark',
         classes: 'luxury-toast',
         icon: 'check_circle',
         timeout: 3000
       })
-      createDialogOpen.value = false
+      productDialogOpen.value = false
+      editingProductId.value = null
     } else {
-      throw new Error('Formato de respuesta de n8n no reconocido')
+      throw new Error(response.data?.message || 'No se pudo guardar el producto.')
     }
   } catch (error) {
-    console.warn('⚠️ Error al registrar en n8n, realizando guardado local temporal:', error.message)
-    
-    // Resilient fallback for local high fidelity prototype
-    const newId = store.products.length ? Math.max(...store.products.map(p => p.id)) + 1 : 1
-    store.products.push({
-      id: newId,
-      name: newProduct.value.name,
-      categoryId: newProduct.value.categoryId,
-      price: newProduct.value.price,
-      image: uploadedImageUrl,
-      description: newProduct.value.description,
-      rating: 5.0
-    })
-
     $q.notify({
-      message: 'Incorporado (Local)',
-      caption: `Guardado en memoria. (API n8n no disponible)`,
-      color: 'white',
-      textColor: 'dark',
-      classes: 'luxury-toast',
-      icon: 'cloud_off',
-      timeout: 3000
+      message: 'No se pudo guardar el producto',
+      caption: error.response?.data?.message || error.message || 'Error de conexión con n8n.',
+      color: 'negative',
+      textColor: 'white',
+      icon: 'error_outline',
+      timeout: 3500
     })
-    createDialogOpen.value = false
   } finally {
     $q.loading.hide()
   }
+}
+
+function editStock(product) {
+  $q.dialog({
+    title: 'Actualizar Stock',
+    message: `Indica cuántas unidades hay disponibles de ${product.name}.`,
+    prompt: {
+      model: String(product.stock ?? 0),
+      type: 'number',
+      min: 0,
+      step: 1
+    },
+    cancel: true,
+    persistent: true
+  }).onOk(async value => {
+    const stock = Number(value)
+
+    if (!Number.isInteger(stock) || stock < 0) {
+      $q.notify({
+        message: 'Cantidad inválida',
+        caption: 'El stock debe ser un número entero mayor o igual a cero.',
+        color: 'negative',
+        textColor: 'white'
+      })
+      return
+    }
+
+    $q.loading.show({ message: 'Actualizando inventario...' })
+    try {
+      const response = await api.post('/update-product-stock', {
+        admin_token: localStorage.getItem('ji_admin_token'),
+        product_id: product.id,
+        stock
+      })
+
+      if (response.data?.status !== 'success') {
+        throw new Error(response.data?.message || 'No se pudo actualizar el stock.')
+      }
+
+      await store.fetchProducts()
+      $q.notify({
+        message: 'Stock Actualizado',
+        caption: `${product.name}: ${stock} unidades disponibles.`,
+        color: 'positive',
+        textColor: 'white',
+        icon: 'inventory_2'
+      })
+    } catch (error) {
+      $q.notify({
+        message: 'No se pudo actualizar el stock',
+        caption: error.response?.data?.message || error.message,
+        color: 'negative',
+        textColor: 'white',
+        icon: 'error_outline'
+      })
+    } finally {
+      $q.loading.hide()
+    }
+  })
 }
 
 
@@ -372,10 +509,21 @@ function deleteProduct(productId) {
       label: 'Eliminar'
     },
     persistent: true
-  }).onOk(() => {
-    const idx = store.products.findIndex(p => p.id === productId)
-    if (idx !== -1) {
-      store.products.splice(idx, 1)
+  }).onOk(async () => {
+    $q.loading.show({ message: 'Retirando pieza del catálogo...' })
+
+    try {
+      const response = await api.post('/delete-product', {
+        admin_token: localStorage.getItem('ji_admin_token'),
+        product_id: productId
+      })
+
+      if (response.data?.status !== 'success') {
+        throw new Error(response.data?.message || 'No se pudo eliminar el producto.')
+      }
+
+      await store.fetchProducts()
+
       $q.notify({
         message: 'Producto Retirado',
         caption: 'La pieza ha sido removida del catálogo.',
@@ -385,6 +533,17 @@ function deleteProduct(productId) {
         icon: 'delete',
         timeout: 2000
       })
+    } catch (error) {
+      $q.notify({
+        message: 'No se pudo retirar el producto',
+        caption: error.response?.data?.message || error.message || 'Error de conexión con n8n.',
+        color: 'negative',
+        textColor: 'white',
+        icon: 'error_outline',
+        timeout: 3500
+      })
+    } finally {
+      $q.loading.hide()
     }
   })
 }
