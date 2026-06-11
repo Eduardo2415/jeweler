@@ -84,11 +84,11 @@
     <section class="categories">
       <div class="container">
         <div class="row scroll hide-scrollbar">
-          <div
+          <router-link
             v-for="cat in categories"
             :key="cat.value"
-            class="cat-item"
-            @click="$emit('update:activeCategory', cat.value)"
+            :to="'/categoria/' + cat.value"
+            class="cat-item no-decoration"
           >
             <ImageWithFallback
               :src="cat.image"
@@ -97,7 +97,7 @@
             <div :class="['cat-label', { active: activeCategory === cat.value }]">
               {{ cat.name }}
             </div>
-          </div>
+          </router-link>
         </div>
       </div>
     </section>
@@ -106,16 +106,16 @@
     <main class="grid-wrap">
       <div class="container">
         <div class="grid">
-          <article
+          <router-link
             v-for="product in filteredProducts"
             :key="product.id"
-            class="product-card"
-            @click="open(product)"
+            :to="'/producto/' + product.id"
+            class="product-card no-decoration"
           >
             <div class="img-wrap">
               <ImageWithFallback :src="product.image" :alt="product.name" class-name="prod-img" />
               <q-badge v-if="product.stock <= 0" class="stock-badge" color="dark">Agotado</q-badge>
-              <button class="fav" @click.stop="toggleFavorite(product.id)">❤</button>
+              <button class="fav" @click.stop.prevent="toggleFavorite(product.id)">❤</button>
             </div>
             <div class="info">
               <h3 class="p-name">{{ product.name }}</h3>
@@ -127,9 +127,19 @@
                   <div class="price">{{ formatPrice(getEffectivePrice(product)) }}</div>
                 </div>
 
+                <!-- Selector if product has sizes -->
+                <div
+                  v-if="product.sizes && Array.isArray(product.sizes) && product.sizes.length > 0"
+                  class="select-size-link flex items-center text-accent font-sans text-weight-bold"
+                  style="cursor: pointer; font-size: 13px;"
+                >
+                  <span>Ver Tallas</span>
+                  <q-icon name="chevron_right" size="16px" class="q-ml-xs" />
+                </div>
+
                 <!-- Quantity selector if already in cart -->
                 <div
-                  v-if="getProductQuantity(product.id) > 0"
+                  v-else-if="getProductQuantity(product.id) > 0"
                   class="qty-selector-pill flex items-center justify-between"
                 >
                   <q-btn
@@ -165,7 +175,7 @@
                 />
               </div>
             </div>
-          </article>
+          </router-link>
         </div>
       </div>
     </main>
@@ -347,12 +357,13 @@ function notifyStockLimit(product) {
   })
 }
 
-function open(product) {
-  emit('view-product', product)
-}
 </script>
 
 <style scoped>
+.no-decoration {
+  text-decoration: none !important;
+  color: inherit !important;
+}
 /* Root boxed layout for catalog */
 .catalog-root {
   max-width: 1280px;

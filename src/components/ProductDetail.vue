@@ -51,8 +51,39 @@
             }}</span>
             <span>{{ formatPrice(getEffectivePrice(product)) }}</span>
           </div>
-          <div :class="['stock-status', { empty: product.stock <= 0 }]">
-            {{ product.stock > 0 ? `${product.stock} unidades disponibles` : 'Producto agotado' }}
+          <div :class="['stock-status', { empty: maxAvailableStock <= 0 }]">
+            <span v-if="product.sizes && product.sizes.length > 0 && !selectedSize">
+              Selecciona una talla para ver disponibilidad
+            </span>
+            <span v-else>
+              {{ maxAvailableStock > 0 ? `${maxAvailableStock} unidades disponibles` : 'Agotado en esta talla' }}
+            </span>
+          </div>
+
+          <!-- Size Selector -->
+          <div v-if="product.sizes && product.sizes.length > 0" class="size-select-section q-mt-md font-sans">
+            <span class="size-label block q-mb-xs">Selecciona una Talla:</span>
+            <div class="flex gap-2">
+              <button
+                v-for="sizeObj in product.sizes"
+                :key="sizeObj.size"
+                type="button"
+                class="size-btn"
+                :class="{
+                  active: selectedSize === sizeObj.size,
+                  disabled: Number(sizeObj.stock) <= 0
+                }"
+                :disabled="Number(sizeObj.stock) <= 0"
+                @click="selectedSize = sizeObj.size"
+              >
+                {{ sizeObj.size }}
+                <q-tooltip v-if="Number(sizeObj.stock) <= 0" class="bg-dark text-white">Agotado</q-tooltip>
+                <q-tooltip v-else class="bg-dark text-white">Stock: {{ sizeObj.stock }}</q-tooltip>
+              </button>
+            </div>
+            <div v-if="!selectedSize" class="text-caption text-grey-6 q-mt-xs">
+              * Por favor, elige un tamaño para continuar.
+            </div>
           </div>
 
           <!-- Quantity Selector -->
@@ -67,13 +98,18 @@
                 size="sm"
                 icon="add"
                 class="qty-btn"
-                :disable="quantity >= product.stock"
+                :disable="quantity >= maxAvailableStock"
                 @click="increaseQty"
               />
             </div>
           </div>
 
-          <q-btn unelevated class="purchase-btn" :disable="product.stock <= 0" @click="onAddToCart">
+          <q-btn
+            unelevated
+            class="purchase-btn"
+            :disable="maxAvailableStock <= 0 || (product.sizes && product.sizes.length > 0 && !selectedSize)"
+            @click="onAddToCart"
+          >
             <q-icon name="shopping_bag" class="q-mr-sm" /> Agregar al carrito
           </q-btn>
         </div>
@@ -95,6 +131,7 @@ const store = useShopStore()
 const $q = useQuasar()
 
 const quantity = ref(1)
+const selectedSize = ref(null)
 const animateBadge = ref(false)
 
 // Watch cart length changes to pulse the badge
@@ -110,7 +147,20 @@ watch(
   },
 )
 
+watch(selectedSize, () => {
+  quantity.value = 1
+})
+
 const cartCount = computed(() => store.cart.length)
+
+const maxAvailableStock = computed(() => {
+  if (props.product.sizes && Array.isArray(props.product.sizes) && props.product.sizes.length > 0) {
+    if (!selectedSize.value) return 0
+    const sizeObj = props.product.sizes.find(s => s.size === selectedSize.value)
+    return sizeObj ? Number(sizeObj.stock) || 0 : 0
+  }
+  return Number(props.product.stock) || 0
+})
 
 function formatPrice(value) {
   return new Intl.NumberFormat('en-US', {
@@ -121,7 +171,7 @@ function formatPrice(value) {
 }
 
 function increaseQty() {
-  if (quantity.value < props.product.stock) {
+  if (quantity.value < maxAvailableStock.value) {
     quantity.value++
   }
 }
@@ -133,13 +183,26 @@ function decreaseQty() {
 }
 
 function onAddToCart() {
-  if (props.product.stock <= 0) return
+  if (props.product.sizes && Array.isArray(props.product.sizes) && props.product.sizes.length > 0 && !selectedSize.value) {
+    $q.notify({
+      message: 'Selecciona una talla',
+      caption: 'Debes elegir una talla antes de añadir al carrito.',
+      color: 'warning',
+      textColor: 'dark',
+      icon: 'warning',
+    })
+    return
+  }
 
-  const currentQuantity = store.cart.find((item) => item.id === props.product.id)?.quantity || 0
-  if (currentQuantity + quantity.value > props.product.stock) {
+  const stock = maxAvailableStock.value
+  if (stock <= 0) return
+
+  const cartId = `${props.product.id}-${selectedSize.value || 'nosize'}`
+  const currentQuantity = store.cart.find((item) => item.cartId === cartId)?.quantity || 0
+  if (currentQuantity + quantity.value > stock) {
     $q.notify({
       message: 'Stock insuficiente',
-      caption: `Solo hay ${props.product.stock} unidades disponibles.`,
+      caption: `Solo hay ${stock} unidades disponibles para este tamaño.`,
       color: 'negative',
       textColor: 'white',
       icon: 'inventory_2',
@@ -147,10 +210,10 @@ function onAddToCart() {
     return
   }
 
-  emit('add-to-cart', { product: props.product, qty: quantity.value })
+  emit('add-to-cart', { product: props.product, qty: quantity.value, selectedSize: selectedSize.value })
   $q.notify({
     message: 'Pieza agregada al carrito',
-    caption: `${quantity.value}x ${props.product.name} ha sido añadida.`,
+    caption: `${quantity.value}x ${props.product.name}${selectedSize.value ? ' (Talla ' + selectedSize.value + ')' : ''} ha sido añadida.`,
     position: 'bottom-right',
     timeout: 1800,
     classes: 'luxury-toast',
@@ -435,5 +498,51 @@ function onAddToCart() {
 .flex-column {
   display: flex;
   flex-direction: column;
+}
+
+.size-select-section {
+  .size-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #666666;
+  }
+}
+
+.size-btn {
+  background-color: #ffffff;
+  color: #333333;
+  border: 1px solid rgba(180, 127, 96, 0.2);
+  border-radius: 12px;
+  min-width: 44px;
+  height: 40px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+
+  &:hover:not(.disabled) {
+    border-color: #b47f60;
+    color: #b47f60;
+    transform: translateY(-1px);
+  }
+
+  &.active {
+    background-color: #b47f60;
+    color: #ffffff;
+    border-color: #b47f60;
+    box-shadow: 0 4px 10px rgba(180, 127, 96, 0.25);
+  }
+
+  &.disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    text-decoration: line-through;
+    background-color: #f7f2ee;
+  }
 }
 </style>

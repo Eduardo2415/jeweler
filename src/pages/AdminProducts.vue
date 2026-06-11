@@ -190,7 +190,18 @@
             ]"
           />
 
+          <!-- Toggle Tallas -->
+          <div class="flex items-center justify-start q-py-xs">
+            <q-toggle
+              v-model="hasSizes"
+              label="¿Este producto tiene tallas/variaciones?"
+              color="accent"
+            />
+          </div>
+
+          <!-- Stock convencional -->
           <q-input
+            v-if="!hasSizes"
             v-model.number="newProduct.stock"
             type="number"
             outlined
@@ -203,6 +214,62 @@
               (val) => val >= 0 || 'La cantidad no puede ser negativa',
             ]"
           />
+
+          <!-- Tabla de Stock por Tallas -->
+          <div v-else class="sizes-manager q-mb-md">
+            <div class="row items-center justify-between q-mb-sm">
+              <span class="text-subtitle2 text-grey-8">Stock por Tallas</span>
+              <q-btn
+                flat
+                dense
+                color="accent"
+                icon="add"
+                label="Añadir Talla"
+                @click="addSizeRow"
+              />
+            </div>
+
+            <div v-if="sizesList.length === 0" class="text-caption text-grey-6 text-center q-py-sm">
+              No has añadido ninguna talla aún. Haz click en "Añadir Talla".
+            </div>
+
+            <div v-else class="flex flex-column gap-2">
+              <div v-for="(sizeRow, idx) in sizesList" :key="idx" class="row items-center gap-2">
+                <q-input
+                  v-model="sizeRow.size"
+                  outlined
+                  dense
+                  label="Talla (ej: 6, 18cm)"
+                  color="accent"
+                  class="col"
+                  :rules="[val => !!val || 'Requerido']"
+                  hide-bottom-space
+                />
+                <q-input
+                  v-model.number="sizeRow.stock"
+                  type="number"
+                  outlined
+                  dense
+                  label="Stock"
+                  color="accent"
+                  class="col"
+                  :rules="[
+                    val => val !== null && val !== '' || 'Requerido',
+                    val => Number.isInteger(val) && val >= 0 || 'Inválido'
+                  ]"
+                  hide-bottom-space
+                />
+                <q-btn
+                  flat
+                  round
+                  dense
+                  color="negative"
+                  icon="delete"
+                  @click="removeSizeRow(idx)"
+                />
+              </div>
+            </div>
+          </div>
 
           <q-input
             v-model="newProduct.description"
@@ -273,6 +340,9 @@ const uploaderRef = ref(null)
 const selectedFile = ref(null)
 const isEditing = computed(() => editingProductId.value !== null)
 
+const hasSizes = ref(false)
+const sizesList = ref([])
+
 const newProduct = ref({
   name: '',
   categoryId: null,
@@ -282,6 +352,14 @@ const newProduct = ref({
   description: '',
   image: '',
 })
+
+function addSizeRow() {
+  sizesList.value.push({ size: '', stock: 1 })
+}
+
+function removeSizeRow(index) {
+  sizesList.value.splice(index, 1)
+}
 
 const initialPagination = {
   sortBy: 'desc',
@@ -326,6 +404,8 @@ function getCategoryName(categoryId) {
 function openCreateDialog() {
   editingProductId.value = null
   selectedFile.value = null
+  hasSizes.value = false
+  sizesList.value = []
   newProduct.value = {
     name: '',
     categoryId: 1,
@@ -341,6 +421,13 @@ function openCreateDialog() {
 function openEditDialog(product) {
   editingProductId.value = product.id
   selectedFile.value = null
+  if (product.sizes && Array.isArray(product.sizes) && product.sizes.length > 0) {
+    hasSizes.value = true
+    sizesList.value = JSON.parse(JSON.stringify(product.sizes))
+  } else {
+    hasSizes.value = false
+    sizesList.value = []
+  }
   newProduct.value = {
     name: product.name,
     categoryId: product.categoryId,
@@ -371,6 +458,39 @@ function onFileRemoved() {
 }
 
 async function submitProduct() {
+  // Validate sizes if toggle is on
+  let finalSizes = null
+  if (hasSizes.value) {
+    if (sizesList.value.length === 0) {
+      $q.notify({
+        message: 'Faltan tallas',
+        caption: 'Debes añadir al menos una talla si activaste la opción.',
+        color: 'negative',
+        textColor: 'white',
+      })
+      return
+    }
+
+    const invalidSizes = sizesList.value.some(s => !s.size || s.stock === null || s.stock === '')
+    if (invalidSizes) {
+      $q.notify({
+        message: 'Tallas incompletas',
+        caption: 'Por favor, llena los nombres y stock de todas las tallas.',
+        color: 'negative',
+        textColor: 'white',
+      })
+      return
+    }
+
+    finalSizes = sizesList.value.map(s => ({
+      size: s.size.trim(),
+      stock: Number(s.stock)
+    }))
+
+    // Calculate total stock
+    newProduct.value.stock = finalSizes.reduce((sum, s) => sum + s.stock, 0)
+  }
+
   let uploadedImageUrl =
     newProduct.value.image ||
     'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400&h=400&fit=crop'
@@ -415,6 +535,7 @@ async function submitProduct() {
       stock: newProduct.value.stock,
       description: newProduct.value.description,
       image: uploadedImageUrl,
+      sizes: finalSizes,
     }
 
     const endpoint = isEditing.value ? '/update-product' : '/create-product'
@@ -455,6 +576,23 @@ async function submitProduct() {
 }
 
 function editStock(product) {
+  if (product.sizes && Array.isArray(product.sizes) && product.sizes.length > 0) {
+    $q.dialog({
+      title: 'Gestionar Stock por Tallas',
+      message: `Este producto tiene variaciones de tallas. Edita el producto para actualizar el stock detallado de cada una.`,
+      ok: {
+        unelevated: true,
+        color: 'accent',
+        label: 'Editar Producto'
+      },
+      cancel: true,
+      persistent: true
+    }).onOk(() => {
+      openEditDialog(product)
+    })
+    return
+  }
+
   $q.dialog({
     title: 'Actualizar Stock',
     message: `Indica cuántas unidades hay disponibles de ${product.name}.`,

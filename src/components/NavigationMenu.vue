@@ -83,10 +83,19 @@
           <div class="footer-logo font-serif q-mb-xs">JUAN INVERSIONES</div>
           <div class="footer-hours q-mb-md">Atención: Lun - Sáb: 10:00 - 20:00</div>
           <div class="social-row flex justify-center gap-4">
-            <a href="https://instagram.com" target="_blank" class="social-link">
+            <a v-if="store.socialInstagram" :href="store.socialInstagram" target="_blank" class="social-link">
               <q-icon name="camera_alt" size="20px" />
             </a>
-            <a href="https://wa.me/5491112345678" target="_blank" class="social-link">
+            <a v-if="store.socialFacebook" :href="store.socialFacebook" target="_blank" class="social-link">
+              <q-icon name="facebook" size="20px" />
+            </a>
+            <a v-if="store.socialTiktok" :href="store.socialTiktok" target="_blank" class="social-link">
+              <q-icon name="music_note" size="20px" />
+            </a>
+            <a v-if="store.socialYoutube" :href="store.socialYoutube" target="_blank" class="social-link">
+              <q-icon name="play_circle_filled" size="20px" />
+            </a>
+            <a v-if="store.whatsappNumber" :href="'https://wa.me/' + store.whatsappNumber.replace(/[^0-9]/g, '')" target="_blank" class="social-link">
               <q-icon name="whatsapp" size="20px" />
             </a>
             <a href="mailto:info@juaninversiones.com" class="social-link">
@@ -122,7 +131,8 @@ const navigateScreen = (screenName) => {
 const openWhatsApp = () => {
   const message =
     'Hola JUAN INVERSIONES, me gustaría recibir asesoría personalizada sobre sus exclusivas piezas de joyería.'
-  const url = `https://wa.me/5491112345678?text=${encodeURIComponent(message)}`
+  const whatsappNum = store.whatsappNumber ? store.whatsappNumber.replace(/[^0-9]/g, '') : '5491112345678'
+  const url = `https://wa.me/${whatsappNum}?text=${encodeURIComponent(message)}`
   window.open(url, '_blank')
 }
 </script>

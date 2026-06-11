@@ -164,6 +164,12 @@ export const useShopStore = defineStore('shop', () => {
   const orders = ref([])
   const banners = ref([])
   const bannerInterval = ref(5000)
+  const bankAccounts = ref([])
+  const whatsappNumber = ref('5491112345678')
+  const socialFacebook = ref(null)
+  const socialInstagram = ref(null)
+  const socialTiktok = ref(null)
+  const socialYoutube = ref(null)
 
   // Computed
   const filteredProducts = computed(() => {
@@ -176,10 +182,16 @@ export const useShopStore = defineStore('shop', () => {
   })
 
   // Actions
-  const addToCart = (product, qty = 1) => {
-    const existingItem = cart.value.find((item) => item.id === product.id)
+  const addToCart = (product, qty = 1, selectedSize = null) => {
+    const cartId = `${product.id}-${selectedSize || 'nosize'}`
+    const existingItem = cart.value.find((item) => item.cartId === cartId)
     const currentQuantity = existingItem?.quantity || 0
-    const stock = Number(product.stock) || 0
+
+    let stock = Number(product.stock) || 0
+    if (product.sizes && Array.isArray(product.sizes) && product.sizes.length > 0 && selectedSize) {
+      const sizeObj = product.sizes.find(s => s.size === selectedSize)
+      stock = sizeObj ? Number(sizeObj.stock) || 0 : 0
+    }
 
     if (qty <= 0 || currentQuantity + qty > stock) {
       return false
@@ -190,6 +202,8 @@ export const useShopStore = defineStore('shop', () => {
     } else {
       cart.value.push({
         ...product,
+        cartId,
+        selectedSize,
         regular_price: product.price,
         price: getEffectivePrice(product),
         quantity: qty,
@@ -199,20 +213,26 @@ export const useShopStore = defineStore('shop', () => {
     return true
   }
 
-  const removeFromCart = (productId) => {
-    const index = cart.value.findIndex((item) => item.id === productId)
+  const removeFromCart = (cartId) => {
+    const index = cart.value.findIndex((item) => item.cartId === cartId)
     if (index !== -1) {
       cart.value.splice(index, 1)
     }
   }
 
-  const updateQuantity = (productId, quantity) => {
-    const item = cart.value.find((item) => item.id === productId)
+  const updateQuantity = (cartId, quantity) => {
+    const item = cart.value.find((item) => item.cartId === cartId)
     if (item) {
+      let stock = Number(item.stock) || 0
+      if (item.sizes && Array.isArray(item.sizes) && item.sizes.length > 0 && item.selectedSize) {
+        const sizeObj = item.sizes.find(s => s.size === item.selectedSize)
+        stock = sizeObj ? Number(sizeObj.stock) || 0 : 0
+      }
+
       if (quantity <= 0) {
-        removeFromCart(productId)
+        removeFromCart(cartId)
         return true
-      } else if (quantity <= item.stock) {
+      } else if (quantity <= stock) {
         item.quantity = quantity
         return true
       }
@@ -231,13 +251,44 @@ export const useShopStore = defineStore('shop', () => {
 
   const loginUser = (email, provider = 'email') => {
     currentUser.value = { email, provider }
+    fetchOrders()
   }
 
   const logoutUser = () => {
     currentUser.value = null
+    orders.value = []
   }
 
-  const createOrder = (paymentMethod, bankName = null) => {
+  const fetchOrders = async () => {
+    try {
+      if (!currentUser.value) {
+        orders.value = []
+        return
+      }
+      const response = await api.post('/get-orders', {
+        user_email: currentUser.value.email,
+      })
+      const responseData = response.data?.data ?? response.data
+      if (Array.isArray(responseData)) {
+        orders.value = responseData.map(o => ({
+          id: o.order_id,
+          items: o.items,
+          total: o.total,
+          paymentMethod: o.payment_method,
+          bankName: o.bank_name,
+          status: o.status,
+          date: o.date,
+          receiptImage: o.receipt_image,
+          user_email: o.user_email,
+          adminNotes: o.admin_notes
+        }))
+      }
+    } catch (error) {
+      console.warn('⚠️ No se pudo obtener el historial de pedidos:', error.message)
+    }
+  }
+
+  const createOrder = async (paymentMethod, bankName = null) => {
     const orderId = `JI-${Math.floor(10000 + Math.random() * 90000)}`
     const newOrder = {
       id: orderId,
@@ -254,17 +305,62 @@ export const useShopStore = defineStore('shop', () => {
         minute: '2-digit',
       }),
       receiptImage: null,
+      user_email: currentUser.value ? currentUser.value.email : null,
     }
+
+    try {
+      await api.post('/create-order', {
+        order_id: newOrder.id,
+        items: newOrder.items,
+        total: newOrder.total,
+        payment_method: newOrder.paymentMethod,
+        bank_name: newOrder.bankName,
+        status: newOrder.status,
+        date: newOrder.date,
+        receipt_image: newOrder.receiptImage,
+        user_email: newOrder.user_email
+      })
+    } catch (error) {
+      console.error('Error al persistir el pedido en n8n:', error.message)
+    }
+
     orders.value.unshift(newOrder)
     clearCart()
     return newOrder
   }
 
-  const uploadReceipt = (orderId, receiptImage) => {
+  const uploadReceipt = async (orderId, file) => {
     const order = orders.value.find((o) => o.id === orderId)
-    if (order) {
-      order.receiptImage = receiptImage
-      order.status = 'Pendiente de Verificación'
+    if (!order) return false
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('folder', 'comprobantes')
+
+      const uploadResponse = await api.post('/upload-image', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+
+      if (uploadResponse.data && uploadResponse.data.url) {
+        const url = uploadResponse.data.url
+        const updateRes = await api.post('/update-order', {
+          order_id: orderId,
+          receipt_image: url
+        })
+
+        if (updateRes.data?.status === 'success') {
+          order.receiptImage = url
+          order.status = 'Pendiente de Verificación'
+          return true
+        }
+      }
+      return false
+    } catch (error) {
+      console.error('Error al subir comprobante:', error.message)
+      throw error
     }
   }
 
@@ -322,19 +418,51 @@ export const useShopStore = defineStore('shop', () => {
       if (response.data?.banner_interval) {
         bannerInterval.value = Number(response.data.banner_interval)
       }
+      if (response.data?.whatsapp_number) {
+        whatsappNumber.value = response.data.whatsapp_number
+      }
+      if (response.data?.social_facebook !== undefined) {
+        socialFacebook.value = response.data.social_facebook
+      }
+      if (response.data?.social_instagram !== undefined) {
+        socialInstagram.value = response.data.social_instagram
+      }
+      if (response.data?.social_tiktok !== undefined) {
+        socialTiktok.value = response.data.social_tiktok
+      }
+      if (response.data?.social_youtube !== undefined) {
+        socialYoutube.value = response.data.social_youtube
+      }
     } catch (error) {
       console.warn('⚠️ No se pudo obtener los banners de n8n:', error.message)
     }
   }
 
-  const updateSettings = async (interval) => {
+  const updateSettings = async (settings) => {
     try {
       const response = await api.post('/update-settings', {
         admin_token: localStorage.getItem('ji_admin_token'),
-        banner_interval: interval,
+        ...settings,
       })
       if (response.data?.status === 'success') {
-        bannerInterval.value = Number(interval)
+        if (settings.banner_interval !== undefined) {
+          bannerInterval.value = Number(settings.banner_interval)
+        }
+        if (settings.whatsapp_number !== undefined) {
+          whatsappNumber.value = settings.whatsapp_number
+        }
+        if (settings.social_facebook !== undefined) {
+          socialFacebook.value = settings.social_facebook
+        }
+        if (settings.social_instagram !== undefined) {
+          socialInstagram.value = settings.social_instagram
+        }
+        if (settings.social_tiktok !== undefined) {
+          socialTiktok.value = settings.social_tiktok
+        }
+        if (settings.social_youtube !== undefined) {
+          socialYoutube.value = settings.social_youtube
+        }
         return true
       }
       return false
@@ -344,10 +472,44 @@ export const useShopStore = defineStore('shop', () => {
     }
   }
 
+  const fetchBankAccounts = async () => {
+    try {
+      const response = await api.get('/get-bank-accounts')
+      const responseData = response.data?.data ?? response.data?.bank_accounts ?? response.data
+      if (Array.isArray(responseData)) {
+        bankAccounts.value = responseData
+      }
+    } catch (error) {
+      console.warn('⚠️ No se pudo obtener las cuentas bancarias de n8n:', error.message)
+    }
+  }
+
+  const linkGuestOrder = async (orderId, email) => {
+    try {
+      const response = await api.post('/update-order', {
+        order_id: orderId,
+        user_email: email,
+      })
+      if (response.data?.status === 'success') {
+        const order = orders.value.find((o) => o.id === orderId)
+        if (order) {
+          order.user_email = email
+        }
+        await fetchOrders()
+        return true
+      }
+      return false
+    } catch (error) {
+      console.error('Error al vincular pedido de invitado:', error.message)
+      return false
+    }
+  }
+
   // Trigger initial fetch
   fetchCategories()
   fetchProducts()
   fetchBanners()
+  fetchBankAccounts()
 
   return {
     // State
@@ -359,6 +521,12 @@ export const useShopStore = defineStore('shop', () => {
     orders,
     banners,
     bannerInterval,
+    bankAccounts,
+    whatsappNumber,
+    socialFacebook,
+    socialInstagram,
+    socialTiktok,
+    socialYoutube,
 
     // Computed
     filteredProducts,
@@ -378,5 +546,8 @@ export const useShopStore = defineStore('shop', () => {
     fetchCategories,
     fetchBanners,
     updateSettings,
+    fetchBankAccounts,
+    fetchOrders,
+    linkGuestOrder,
   }
 })

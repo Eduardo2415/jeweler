@@ -42,7 +42,8 @@
           <p class="muted font-sans q-mb-md">Visítanos en nuestro showroom con cita previa.</p>
           <div class="socials flex gap-3">
             <a
-              href="https://instagram.com"
+              v-if="store.socialInstagram"
+              :href="store.socialInstagram"
               target="_blank"
               class="social-btn"
               aria-label="Instagram"
@@ -50,7 +51,35 @@
               <q-icon name="camera_alt" size="18px" />
             </a>
             <a
-              href="https://wa.me/5491112345678"
+              v-if="store.socialFacebook"
+              :href="store.socialFacebook"
+              target="_blank"
+              class="social-btn"
+              aria-label="Facebook"
+            >
+              <q-icon name="facebook" size="18px" />
+            </a>
+            <a
+              v-if="store.socialTiktok"
+              :href="store.socialTiktok"
+              target="_blank"
+              class="social-btn"
+              aria-label="TikTok"
+            >
+              <q-icon name="music_note" size="18px" />
+            </a>
+            <a
+              v-if="store.socialYoutube"
+              :href="store.socialYoutube"
+              target="_blank"
+              class="social-btn"
+              aria-label="YouTube"
+            >
+              <q-icon name="play_circle_filled" size="18px" />
+            </a>
+            <a
+              v-if="store.whatsappNumber"
+              :href="'https://wa.me/' + store.whatsappNumber.replace(/[^0-9]/g, '')"
               target="_blank"
               class="social-btn"
               aria-label="WhatsApp"

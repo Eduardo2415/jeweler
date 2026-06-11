@@ -95,6 +95,17 @@
               </div>
             </div>
 
+            <!-- Admin Notes / Rejection Comment -->
+            <div v-if="order.adminNotes" class="admin-notes-banner q-mb-md q-pa-md">
+              <div class="flex items-center text-red font-weight-bold text-sm q-mb-xs">
+                <q-icon name="warning" size="18px" class="q-mr-xs" />
+                Nota del Asesor:
+              </div>
+              <p class="admin-notes-text font-sans text-xs text-dark q-mb-none">
+                {{ order.adminNotes }}
+              </p>
+            </div>
+
             <!-- Receipt upload verification (only for Transfer payment method) -->
             <div v-if="order.paymentMethod === 'transfer'" class="receipt-section q-mt-md q-pa-md">
               <div
@@ -169,12 +180,17 @@
 </template>
 
 <script setup>
+import { onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { useShopStore } from '../stores/shop'
 
 const emit = defineEmits(['back'])
 const store = useShopStore()
 const $q = useQuasar()
+
+onMounted(() => {
+  store.fetchOrders()
+})
 
 function formatPrice(value) {
   return new Intl.NumberFormat('en-US', {
@@ -214,20 +230,39 @@ function handleFileChange(event, orderId) {
   const file = event.target.files[0]
   if (!file) return
 
-  const reader = new FileReader()
-  reader.readAsDataURL(file)
-  reader.onload = () => {
-    store.uploadReceipt(orderId, reader.result)
-    $q.notify({
-      message: 'Comprobante Registrado',
-      caption: 'El comprobante ha sido subido correctamente y está en revisión.',
-      color: 'white',
-      textColor: 'dark',
-      classes: 'luxury-toast',
-      icon: 'cloud_done',
-      timeout: 2500,
+  $q.loading.show({ message: 'Subiendo comprobante de pago...' })
+  store.uploadReceipt(orderId, file)
+    .then((success) => {
+      if (success) {
+        $q.notify({
+          message: 'Comprobante Registrado',
+          caption: 'El comprobante ha sido subido correctamente y está en revisión.',
+          color: 'white',
+          textColor: 'dark',
+          classes: 'luxury-toast',
+          icon: 'cloud_done',
+          timeout: 2500,
+        })
+      } else {
+        $q.notify({
+          message: 'Error al subir',
+          caption: 'No se pudo vincular el comprobante al pedido.',
+          color: 'negative',
+          timeout: 3000,
+        })
+      }
     })
-  }
+    .catch((error) => {
+      $q.notify({
+        message: 'Fallo en la subida',
+        caption: error.message || 'Error al enviar comprobante.',
+        color: 'negative',
+        timeout: 3000,
+      })
+    })
+    .finally(() => {
+      $q.loading.hide()
+    })
 }
 </script>
 
@@ -431,6 +466,16 @@ function handleFileChange(event, orderId) {
   background-color: #f7faf8;
   border-color: rgba(33, 186, 69, 0.12);
   border-style: dashed;
+}
+
+.admin-notes-banner {
+  background-color: rgba(219, 40, 40, 0.04);
+  border: 1px solid rgba(219, 40, 40, 0.15);
+  border-radius: 16px;
+  
+  .text-red {
+    color: #db2828 !important;
+  }
 }
 
 .receipt-preview-wrap {

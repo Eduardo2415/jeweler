@@ -15,7 +15,7 @@
       v-if="currentScreen === 'catalog'"
       :categories="categories"
       :active-category="selectedCategory"
-      @update:active-category="selectedCategory = $event"
+      @update:active-category="onCategorySelect"
       @view-product="openProduct"
       @toggle-menu="menuOpen = true"
       @open-cart="openCart"
@@ -24,11 +24,11 @@
     <ProductDetail
       v-else-if="currentScreen === 'detail' && selectedProduct"
       :product="selectedProduct"
-      @back="currentScreen = 'catalog'"
+      @back="goBackToCatalog"
       @add-to-cart="
-        ({ product, qty }) => {
-          addToCart(product, qty)
-          currentScreen = 'catalog'
+        ({ product, qty, selectedSize }) => {
+          addToCart(product, qty, selectedSize)
+          goBackToCatalog()
         }
       "
       @toggle-menu="menuOpen = true"
@@ -37,18 +37,19 @@
 
     <CheckoutView
       v-else-if="currentScreen === 'checkout'"
-      @back="currentScreen = 'catalog'"
+      @back="goBackToCatalog"
       @navigate="currentScreen = $event"
     />
 
-    <OrdersHistoryView v-else-if="currentScreen === 'orders'" @back="currentScreen = 'catalog'" />
+    <OrdersHistoryView v-else-if="currentScreen === 'orders'" @back="goBackToCatalog" />
 
     <SiteFooter />
   </q-page>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import CatalogView from '../components/CatalogView.vue'
 import ProductDetail from '../components/ProductDetail.vue'
 import NavigationMenu from '../components/NavigationMenu.vue'
@@ -59,6 +60,8 @@ import SiteFooter from '../components/SiteFooter.vue'
 import { useShopStore } from '../stores/shop'
 
 const store = useShopStore()
+const route = useRoute()
+const router = useRouter()
 
 const currentScreen = ref('catalog')
 const menuOpen = ref(false)
@@ -70,13 +73,48 @@ const categories = computed(() => {
   return store.categories.filter(c => c.active)
 })
 
-const openProduct = (product) => {
-  selectedProduct.value = product
-  currentScreen.value = 'detail'
+function syncRoute() {
+  const path = route.path
+  if (path.startsWith('/categoria/')) {
+    currentScreen.value = 'catalog'
+    selectedCategory.value = route.params.categoryValue
+  } else if (path.startsWith('/producto/')) {
+    currentScreen.value = 'detail'
+    const productId = Number(route.params.productId)
+    const prod = store.products.find(p => p.id === productId)
+    if (prod) {
+      selectedProduct.value = prod
+    }
+  } else if (path === '/' || path === '') {
+    currentScreen.value = 'catalog'
+    selectedCategory.value = 'Rings'
+  }
 }
 
-const addToCart = (product, qty = 1) => {
-  store.addToCart(product, qty)
+watch(
+  () => route.path,
+  () => {
+    syncRoute()
+  },
+  { immediate: true },
+)
+
+watch(
+  () => store.products,
+  () => {
+    if (route.path.startsWith('/producto/')) {
+      syncRoute()
+    }
+  },
+  { deep: true },
+)
+
+const openProduct = (product) => {
+  router.push('/producto/' + product.id)
+}
+
+const addToCart = (product, qty = 1, selectedSize = null) => {
+  store.addToCart(product, qty, selectedSize)
 }
 
 const openCart = () => {
@@ -84,9 +122,12 @@ const openCart = () => {
 }
 
 const onCategorySelect = (categoryValue) => {
-  selectedCategory.value = categoryValue
-  currentScreen.value = 'catalog'
+  router.push('/categoria/' + categoryValue)
   menuOpen.value = false
+}
+
+const goBackToCatalog = () => {
+  router.push('/categoria/' + selectedCategory.value)
 }
 
 const onScreenSelect = (screenName) => {

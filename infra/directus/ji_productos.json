@@ -94,6 +94,17 @@
         "default_value": 5.0,
         "is_nullable": true
       }
+    },
+    {
+      "field": "sizes",
+      "type": "json",
+      "meta": {
+        "interface": "list",
+        "note": "Arreglo JSON de tallas disponibles con su stock correspondiente."
+      },
+      "schema": {
+        "is_nullable": true
+      }
     }
   ]
 }

@@ -79,11 +79,16 @@
           <div class="summary-card q-pa-md">
             <!-- Items list -->
             <div class="summary-items flex flex-column gap-3 q-mb-md">
-              <div v-for="item in store.cart" :key="item.id" class="summary-item flex items-center">
+              <div v-for="item in store.cart" :key="item.cartId" class="summary-item flex items-center">
                 <q-img :src="item.image" class="item-thumb q-mr-sm" />
                 <div class="item-details flex-1">
                   <h4 class="item-name font-serif">{{ item.name }}</h4>
-                  <span class="item-qty font-sans">Cantidad: {{ item.quantity }}</span>
+                  <div class="flex items-center gap-3">
+                    <span class="item-qty font-sans">Cantidad: {{ item.quantity }}</span>
+                    <q-badge v-if="item.selectedSize" color="accent" outline dense class="text-xs">
+                      Talla: {{ item.selectedSize }}
+                    </q-badge>
+                  </div>
                 </div>
                 <div class="item-price font-serif">
                   {{ formatPrice(item.price * item.quantity) }}
@@ -182,7 +187,7 @@
             </div>
 
             <!-- State 2: Show deposit accounts (if logged in or guestCheckout is true) -->
-            <div v-else class="deposit-details flex flex-column gap-3">
+            <div v-else-if="activeBankAccounts.length > 0" class="deposit-details flex flex-column gap-3">
               <div class="flex justify-between items-center">
                 <span class="step-label">1. Elige un banco para transferir:</span>
                 <span v-if="store.currentUser" class="user-badge flex items-center">
@@ -192,43 +197,54 @@
               </div>
 
               <!-- Bank selector -->
-              <div class="bank-selector flex gap-3">
+              <div class="bank-selector flex gap-3 flex-wrap">
                 <button
-                  class="bank-card flex-1"
-                  :class="{ active: selectedBank === 'oro' }"
-                  @click="selectedBank = 'oro'"
+                  v-for="bank in activeBankAccounts"
+                  :key="bank.id"
+                  class="bank-card flex-1 min-width-120"
+                  :class="{ active: selectedBankId === bank.id }"
+                  @click="selectedBankId = bank.id"
                 >
-                  <span class="bank-name font-serif">Banco Premium Oro</span>
-                </button>
-                <button
-                  class="bank-card flex-1"
-                  :class="{ active: selectedBank === 'platino' }"
-                  @click="selectedBank = 'platino'"
-                >
-                  <span class="bank-name font-serif">Banco Platino</span>
+                  <span class="bank-name font-serif">{{ bank.banco }}</span>
                 </button>
               </div>
 
               <!-- Bank data card -->
-              <div class="bank-details-card q-pa-md">
-                <div
-                  v-for="(field, key) in currentBankData"
-                  :key="key"
-                  class="bank-field flex items-center justify-between q-py-xs"
-                >
+              <div v-if="currentBankData" class="bank-details-card q-pa-md">
+                <div class="bank-field flex items-center justify-between q-py-xs">
                   <div class="field-info flex flex-column">
-                    <span class="field-label text-uppercase">{{ key }}</span>
-                    <span class="field-value">{{ field }}</span>
+                    <span class="field-label text-uppercase">Banco</span>
+                    <span class="field-value">{{ currentBankData.banco }}</span>
                   </div>
-                  <q-btn
-                    flat
-                    round
-                    dense
-                    size="sm"
-                    icon="content_copy"
-                    class="copy-btn"
-                    @click="copyText(field, key)"
-                  />
+                  <q-btn flat round dense size="sm" icon="content_copy" class="copy-btn" @click="copyText(currentBankData.banco, 'Banco')" />
+                </div>
+                <div class="bank-field flex items-center justify-between q-py-xs">
+                  <div class="field-info flex flex-column">
+                    <span class="field-label text-uppercase">Cuenta</span>
+                    <span class="field-value">{{ currentBankData.cuenta }}</span>
+                  </div>
+                  <q-btn flat round dense size="sm" icon="content_copy" class="copy-btn" @click="copyText(currentBankData.cuenta, 'Cuenta')" />
+                </div>
+                <div class="bank-field flex items-center justify-between q-py-xs">
+                  <div class="field-info flex flex-column">
+                    <span class="field-label text-uppercase">Titular</span>
+                    <span class="field-value">{{ currentBankData.titular }}</span>
+                  </div>
+                  <q-btn flat round dense size="sm" icon="content_copy" class="copy-btn" @click="copyText(currentBankData.titular, 'Titular')" />
+                </div>
+                <div class="bank-field flex items-center justify-between q-py-xs">
+                  <div class="field-info flex flex-column">
+                    <span class="field-label text-uppercase">Tipo de Cuenta</span>
+                    <span class="field-value">{{ currentBankData.tipo_cuenta }}</span>
+                  </div>
+                  <q-btn flat round dense size="sm" icon="content_copy" class="copy-btn" @click="copyText(currentBankData.tipo_cuenta, 'Tipo de Cuenta')" />
+                </div>
+                <div v-if="currentBankData.documento" class="bank-field flex items-center justify-between q-py-xs">
+                  <div class="field-info flex flex-column">
+                    <span class="field-label text-uppercase">Cédula / RNC</span>
+                    <span class="field-value">{{ currentBankData.documento }}</span>
+                  </div>
+                  <q-btn flat round dense size="sm" icon="content_copy" class="copy-btn" @click="copyText(currentBankData.documento, 'Cédula o RNC')" />
                 </div>
               </div>
 
@@ -246,6 +262,15 @@
                 @click="finalizeTransferOrder"
               />
             </div>
+
+            <!-- Fallback when no bank accounts are active -->
+            <div v-else class="auth-prompt flex flex-column items-center text-center gap-3 q-py-md">
+              <q-icon name="warning" size="40px" class="text-warning" />
+              <h4 class="auth-prompt-title font-serif">Transferencia No Disponible</h4>
+              <p class="auth-prompt-desc">
+                Las transferencias bancarias directas están temporalmente deshabilitadas. Por favor, selecciona "Asesor WhatsApp" para coordinar tu pago.
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -257,7 +282,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { useShopStore } from '../stores/shop'
 import AuthDialog from './AuthDialog.vue'
@@ -268,29 +293,24 @@ const $q = useQuasar()
 
 const paymentMethod = ref('whatsapp')
 const guestCheckout = ref(false)
-const selectedBank = ref('oro')
+const selectedBankId = ref(null)
 const authDialogOpen = ref(false)
 const completedOrder = ref(null)
 
-const banks = {
-  oro: {
-    banco: 'Banco Premium Oro',
-    cuenta: 'Cuenta Corriente: 123-456789-0',
-    titular: 'JUAN INVERSIONES S.R.L.',
-    cbu: '0170012301000045678901',
-    cuit: '30-71234567-8',
-  },
-  platino: {
-    banco: 'Banco de Inversión Platino',
-    cuenta: 'Cuenta Especial: 987-654321-0',
-    titular: 'JUAN INVERSIONES S.R.L.',
-    cbu: '0720098701000065432109',
-    cuit: '30-71234567-8',
-  },
-}
+const activeBankAccounts = computed(() => {
+  return store.bankAccounts.filter(acc => acc.active)
+})
+
+watch(activeBankAccounts, (newVal) => {
+  if (newVal.length > 0 && selectedBankId.value === null) {
+    selectedBankId.value = newVal[0].id
+  }
+}, { immediate: true })
 
 const currentBankData = computed(() => {
-  return banks[selectedBank.value]
+  if (activeBankAccounts.value.length === 0) return null
+  const bank = activeBankAccounts.value.find(acc => acc.id === selectedBankId.value)
+  return bank || activeBankAccounts.value[0]
 })
 
 function formatPrice(value) {
@@ -315,17 +335,21 @@ function copyText(text, fieldName) {
   })
 }
 
-function onAuthSuccess() {
+async function onAuthSuccess() {
   guestCheckout.value = false
+  if (completedOrder.value && store.currentUser) {
+    await store.linkGuestOrder(completedOrder.value.id, store.currentUser.email)
+  }
 }
 
-function checkoutWhatsApp() {
+async function checkoutWhatsApp() {
   let message =
     'Hola JUAN INVERSIONES, deseo finalizar mi pedido de las siguientes piezas de joyería de ultra-lujo:\n\n'
   message += '💍 DETALLES DEL PEDIDO:\n'
 
   store.cart.forEach((item) => {
-    message += `• ${item.quantity}x ${item.name} (${formatPrice(item.price)} c/u) - Total: ${formatPrice(item.price * item.quantity)}\n`
+    const sizeDetails = item.selectedSize ? ` (Talla ${item.selectedSize})` : ''
+    message += `• ${item.quantity}x ${item.name}${sizeDetails} (${formatPrice(item.price)} c/u) - Total: ${formatPrice(item.price * item.quantity)}\n`
   })
 
   message += `\n💵 TOTAL ESTIMADO: ${formatPrice(store.cartTotal)}\n`
@@ -333,27 +357,40 @@ function checkoutWhatsApp() {
   message += 'Por favor, indíquenme los pasos para coordinar la entrega en showroom o domicilio.'
 
   // Registrar orden en local también
-  store.createOrder('whatsapp')
+  await store.createOrder('whatsapp')
 
-  const url = `https://wa.me/5491112345678?text=${encodeURIComponent(message)}`
+  const whatsappNum = store.whatsappNumber ? store.whatsappNumber.replace(/[^0-9]/g, '') : '5491112345678'
+  const url = `https://wa.me/${whatsappNum}?text=${encodeURIComponent(message)}`
   window.open(url, '_blank')
   emit('back')
 }
 
-function finalizeTransferOrder() {
-  const bankName = banks[selectedBank.value].banco
-  const order = store.createOrder('transfer', bankName)
-  completedOrder.value = order
+async function finalizeTransferOrder() {
+  if (!currentBankData.value) return
+  const bankName = currentBankData.value.banco
+  $q.loading.show({ message: 'Procesando tu pedido en JUAN INVERSIONES...' })
+  try {
+    const order = await store.createOrder('transfer', bankName)
+    completedOrder.value = order
 
-  $q.notify({
-    message: 'Pedido Creado',
-    caption: `Número de pedido generado: ${order.id}`,
-    color: 'white',
-    textColor: 'dark',
-    classes: 'luxury-toast',
-    icon: 'check_circle',
-    timeout: 3000,
-  })
+    $q.notify({
+      message: 'Pedido Creado',
+      caption: `Número de pedido generado: ${order.id}`,
+      color: 'white',
+      textColor: 'dark',
+      classes: 'luxury-toast',
+      icon: 'check_circle',
+      timeout: 3000,
+    })
+  } catch (error) {
+    $q.notify({
+      message: 'No se pudo registrar el pedido',
+      caption: error.message || 'Error al conectar con el servidor.',
+      color: 'negative',
+    })
+  } finally {
+    $q.loading.hide()
+  }
 }
 </script>
 

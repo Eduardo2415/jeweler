@@ -41,7 +41,7 @@
           <div v-else class="items-list flex flex-column gap-3">
             <div
               v-for="item in store.cart"
-              :key="item.id"
+              :key="item.cartId"
               class="cart-item-card flex items-center q-pa-sm"
             >
               <!-- Thumbnail -->
@@ -53,6 +53,9 @@
               <div class="item-info flex-1">
                 <div class="item-category">{{ item.category }}</div>
                 <h4 class="item-name font-serif">{{ item.name }}</h4>
+                <div v-if="item.selectedSize" class="text-caption text-accent font-sans q-mt-xs">
+                  Talla: <strong>{{ item.selectedSize }}</strong>
+                </div>
                 <div class="item-price">{{ formatPrice(item.price) }}</div>
               </div>
 
@@ -65,7 +68,7 @@
                   size="xs"
                   icon="delete_outline"
                   class="delete-btn q-mb-sm"
-                  @click="removeItem(item.id)"
+                  @click="removeItem(item.cartId)"
                 />
 
                 <div class="qty-control flex items-center">
@@ -75,7 +78,7 @@
                     size="xs"
                     icon="remove"
                     class="qty-btn"
-                    @click="decreaseQty(item.id)"
+                    @click="decreaseQty(item.cartId)"
                   />
                   <span class="qty-val">{{ item.quantity }}</span>
                   <q-btn
@@ -84,8 +87,8 @@
                     size="xs"
                     icon="add"
                     class="qty-btn"
-                    :disable="item.quantity >= item.stock"
-                    @click="increaseQty(item.id)"
+                    :disable="item.quantity >= getAvailableStock(item)"
+                    @click="increaseQty(item.cartId)"
                   />
                 </div>
               </div>
@@ -144,22 +147,30 @@ function formatPrice(value) {
   }).format(value)
 }
 
-function increaseQty(productId) {
-  const item = store.cart.find((i) => i.id === productId)
+function getAvailableStock(item) {
+  if (item.sizes && Array.isArray(item.sizes) && item.sizes.length > 0 && item.selectedSize) {
+    const sizeObj = item.sizes.find(s => s.size === item.selectedSize)
+    return sizeObj ? Number(sizeObj.stock) || 0 : 0
+  }
+  return Number(item.stock) || 0
+}
+
+function increaseQty(cartId) {
+  const item = store.cart.find((i) => i.cartId === cartId)
   if (item) {
-    store.updateQuantity(productId, item.quantity + 1)
+    store.updateQuantity(cartId, item.quantity + 1)
   }
 }
 
-function decreaseQty(productId) {
-  const item = store.cart.find((i) => i.id === productId)
+function decreaseQty(cartId) {
+  const item = store.cart.find((i) => i.cartId === cartId)
   if (item) {
-    store.updateQuantity(productId, item.quantity - 1)
+    store.updateQuantity(cartId, item.quantity - 1)
   }
 }
 
-function removeItem(productId) {
-  store.removeFromCart(productId)
+function removeItem(cartId) {
+  store.removeFromCart(cartId)
 }
 
 function goToCheckout() {

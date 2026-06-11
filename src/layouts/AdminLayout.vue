@@ -60,6 +60,21 @@
               <span>Gestión de Banners</span>
             </router-link>
 
+            <router-link to="/admin/pedidos" class="nav-link-item" active-class="active">
+              <q-icon name="receipt_long" size="20px" class="q-mr-sm icon" />
+              <span>Gestión de Pedidos</span>
+            </router-link>
+
+            <router-link to="/admin/cuentas" class="nav-link-item" active-class="active">
+              <q-icon name="account_balance" size="20px" class="q-mr-sm icon" />
+              <span>Cuentas Bancarias</span>
+            </router-link>
+
+            <router-link to="/admin/configuracion" class="nav-link-item" active-class="active">
+              <q-icon name="settings" size="20px" class="q-mr-sm icon" />
+              <span>Configuración General</span>
+            </router-link>
+
             <router-link to="/" class="nav-link-item">
               <q-icon name="storefront" size="20px" class="q-mr-sm icon" />
               <span>Ver Tienda Pública</span>
