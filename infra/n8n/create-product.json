@@ -1,0 +1,198 @@
+{
+  "name": "API - Create Product",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "create-product",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "e3a4f831-7b19-482a-a92f-a9cb6014e783",
+      "name": "Webhook Create Product",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -600,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body || {};\n\nif (!body.name || !body.price || !body.description) {\n  return [{\n    json: {\n      ok: false,\n      final_response: {\n        status: 'error',\n        message: 'Faltan campos obligatorios para registrar la pieza.'\n      }\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    ok: true,\n    directus_payload: {\n      name: body.name,\n      categoryId: body.categoryId || 1,\n      price: Number(body.price),\n      description: body.description,\n      image: body.image || null\n    }\n  }\n}];"
+      },
+      "id": "528ef902-12b4-4fa4-a212-be20ac28bd2c",
+      "name": "Formatear Datos Producto",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -350,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.ok }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "d358ef92-12b4-4fa4-a212-be20ac28bd2d",
+      "name": "¿Datos Validos?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -100,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DIRECTUS_URL }}/items/ji_productos",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $('Formatear Datos Producto').item.json.directus_payload }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "a105e551-789a-4c22-b6ab-bcbece44012d",
+      "name": "Guardar en Directus",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        150,
+        50
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "7tjiKRmwXUpshjFn",
+          "name": "directus n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const res = $('Guardar en Directus').item.json.data;\nreturn [{\n  json: {\n    final_response: {\n      status: 'success',\n      id: res.id,\n      message: 'Joya agregada correctamente en Directus.'\n    }\n  }\n}];"
+      },
+      "id": "b79b882e-2cb0-464a-a039-37f8d752945c",
+      "name": "Respuesta Exito Insercion",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        50
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    final_response: $('Formatear Datos Producto').item.json.final_response || {\n      status: 'error',\n      message: 'Error al registrar el producto.'\n    }\n  }\n}];"
+      },
+      "id": "c7b2c803-fd13-4b51-b921-2a1cef5031b4",
+      "name": "Respuesta Error Formato",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        150,
+        250
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.final_response }}",
+        "options": {}
+      },
+      "id": "d2f9bc59-e80a-4f5b-8343-9ac0d598d84d",
+      "name": "Responder App",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        650,
+        150
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Create Product": {
+      "main": [
+        [
+          {
+            "node": "Formatear Datos Producto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatear Datos Producto": {
+      "main": [
+        [
+          {
+            "node": "¿Datos Validos?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Datos Validos?": {
+      "main": [
+        [
+          {
+            "node": "Guardar en Directus",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respuesta Error Formato",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar en Directus": {
+      "main": [
+        [
+          {
+            "node": "Respuesta Exito Insercion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respuesta Exito Insercion": {
+      "main": [
+        [
+          {
+            "node": "Responder App",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respuesta Error Formato": {
+      "main": [
+        [
+          {
+            "node": "Responder App",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import api from '../services/api'
+
 
 export const useShopStore = defineStore('shop', () => {
   // State
@@ -158,6 +160,8 @@ export const useShopStore = defineStore('shop', () => {
 
   const cart = ref([])
   const selectedCategoryId = ref(null)
+  const currentUser = ref(null)
+  const orders = ref([])
 
   // Computed
   const filteredProducts = computed(() => {
@@ -170,15 +174,15 @@ export const useShopStore = defineStore('shop', () => {
   })
 
   // Actions
-  const addToCart = (product) => {
+  const addToCart = (product, qty = 1) => {
     const existingItem = cart.value.find(item => item.id === product.id)
     
     if (existingItem) {
-      existingItem.quantity++
+      existingItem.quantity += qty
     } else {
       cart.value.push({
         ...product,
-        quantity: 1
+        quantity: qty
       })
     }
   }
@@ -209,12 +213,69 @@ export const useShopStore = defineStore('shop', () => {
     selectedCategoryId.value = categoryId
   }
 
+  const loginUser = (email, provider = 'email') => {
+    currentUser.value = { email, provider }
+  }
+
+  const logoutUser = () => {
+    currentUser.value = null
+  }
+
+  const createOrder = (paymentMethod, bankName = null) => {
+    const orderId = `JI-${Math.floor(10000 + Math.random() * 90000)}`
+    const newOrder = {
+      id: orderId,
+      items: [...cart.value],
+      total: cartTotal.value,
+      paymentMethod,
+      bankName,
+      status: paymentMethod === 'whatsapp' ? 'Completado (WhatsApp)' : 'Pendiente de Pago',
+      date: new Date().toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      receiptImage: null
+    }
+    orders.value.unshift(newOrder)
+    clearCart()
+    return newOrder
+  }
+
+  const uploadReceipt = (orderId, receiptImage) => {
+    const order = orders.value.find(o => o.id === orderId)
+    if (order) {
+      order.receiptImage = receiptImage
+      order.status = 'Pendiente de Verificación'
+    }
+  }
+
+  const fetchProducts = async () => {
+    try {
+      const response = await api.get('/get-products')
+      if (response.data && Array.isArray(response.data)) {
+        products.value = response.data
+      } else if (response.data && response.data.products && Array.isArray(response.data.products)) {
+        products.value = response.data.products
+      }
+    } catch (error) {
+      console.warn('⚠️ No se pudo obtener el catálogo de n8n, se mantendrán los productos locales:', error.message)
+    }
+  }
+
+  // Trigger initial fetch
+  fetchProducts()
+
   return {
     // State
     categories,
     products,
     cart,
     selectedCategoryId,
+    currentUser,
+    orders,
     
     // Computed
     filteredProducts,
@@ -225,6 +286,11 @@ export const useShopStore = defineStore('shop', () => {
     removeFromCart,
     updateQuantity,
     clearCart,
-    setSelectedCategory
+    setSelectedCategory,
+    loginUser,
+    logoutUser,
+    createOrder,
+    uploadReceipt,
+    fetchProducts
   }
 })

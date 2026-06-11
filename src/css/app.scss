@@ -125,3 +125,49 @@ hr {
 .transition-smooth {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+// Estilo de notificación de lujo (Quasar Notify)
+.q-notification.luxury-toast {
+  background: #ffffff !important;
+  color: #333333 !important;
+  border-radius: 20px !important;
+  border: 1px solid rgba(180, 127, 96, 0.25) !important;
+  box-shadow: 0 10px 30px rgba(180, 127, 96, 0.12) !important;
+  padding: 12px 18px !important;
+  font-family: 'Inter', sans-serif !important;
+
+  .q-notification__message {
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    color: #333333 !important;
+  }
+  
+  .q-notification__caption {
+    font-size: 12px !important;
+    color: #666666 !important;
+    margin-top: 2px;
+  }
+
+  .q-notification__icon {
+    color: #b47f60 !important;
+    font-size: 24px !important;
+  }
+}
+
+// Animación de rebote de badge
+.badge-pulse {
+  animation: badgeScalePulse 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.45) forwards;
+}
+
+@keyframes badgeScalePulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.35);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+

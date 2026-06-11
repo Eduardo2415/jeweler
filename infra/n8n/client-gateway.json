@@ -1,0 +1,297 @@
+{
+  "name": "API - Client Gateway",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "client-gateway",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "1a4f7831-7b19-482a-a92f-a9cb6014e782",
+      "name": "Webhook Client Gateway",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1000,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.DIRECTUS_URL }}/items/ji_sesiones_cliente",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filter[client_token][_eq]",
+              "value": "={{ $json.body.client_token }}"
+            },
+            {
+              "name": "filter[estado_activo][_eq]",
+              "value": "true"
+            },
+            {
+              "name": "fields",
+              "value": "id,client_token,fecha_expira,estado_activo"
+            },
+            {
+              "name": "limit",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "e305e551-789a-4c22-b6ab-bcbece44012d",
+      "name": "Validar Sesion Cliente",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -750,
+        150
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "7tjiKRmwXUpshjFn",
+          "name": "directus n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $('Webhook Client Gateway').item.json.body || {};\nconst sesion = $json.data?.[0];\n\nif (!body.client_token) {\n  return [{\n    json: {\n      autorizado: false,\n      final_response: {\n        status: 'error',\n        message: 'Token de cliente requerido.'\n      }\n    }\n  }];\n}\n\nif (!body.action) {\n  return [{\n    json: {\n      autorizado: false,\n      final_response: {\n        status: 'error',\n        message: 'Acción requerida.'\n      }\n    }\n  }];\n}\n\nif (!sesion) {\n  return [{\n    json: {\n      autorizado: false,\n      final_response: {\n        status: 'error',\n        message: 'Sesión de cliente inválida o inactiva.'\n      }\n    }\n  }];\n}\n\nconst fechaExpira = new Date(sesion.fecha_expira);\nconst ahora = new Date();\nif (fechaExpira <= ahora) {\n  return [{\n    json: {\n      autorizado: false,\n      final_response: {\n        status: 'error',\n        message: 'Sesión de cliente expirada.'\n      }\n    }\n  }];\n}\n\n// Restrict exclusively to catalogue querying and order status\nconst allowedActions = ['get-products', 'get-orders'];\nif (!allowedActions.includes(body.action)) {\n  return [{\n    json: {\n      autorizado: false,\n      final_response: {\n        status: 'error',\n        message: `Acción no autorizada para clientes: ${body.action}`\n      }\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    autorizado: true,\n    action: body.action,\n    payload: body.payload || {},\n    session_id: sesion.id\n  }\n}];"
+      },
+      "id": "79b882e3-2cb0-464a-a039-37f8d752945b",
+      "name": "Normalizar Sesion Cliente",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -500,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.autorizado }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "358ef902-12b4-4fa4-a212-be20ac28bd2d",
+      "name": "¿Autorizado?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -250,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=http://directus-dpfk3eo6bvn57ljy7z0vlsek:8055/items/ji_sesiones_cliente/{{ $('Normalizar Sesion Cliente').item.json.session_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"ultimo_uso\": new Date().toISOString() } }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "92f7c001-fd34-4b51-b921-2a1cef5031b3",
+      "name": "Actualizar Ultimo Uso",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        50,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "7tjiKRmwXUpshjFn",
+          "name": "directus n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "d4e5f6a7-4444-4444-4444-dddddddddddd",
+                    "leftValue": "={{ $('Normalizar Sesion Cliente').item.json.action }}",
+                    "rightValue": "get-products",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "get-products"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "e5f6a7b8-5555-5555-5555-eeeeeeeeeeee",
+                    "leftValue": "={{ $('Normalizar Sesion Cliente').item.json.action }}",
+                    "rightValue": "get-orders",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "get-orders"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3bbff201-1b2c-47a3-b921-2a1cef5031b3",
+      "name": "Router de Acciones Cliente",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        300,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    final_response: $('Normalizar Sesion Cliente').item.json.final_response || {\n      status: 'error',\n      message: 'Acceso denegado.'\n    }\n  }\n}];"
+      },
+      "id": "7b2c8031-fd13-4b51-b921-2a1cef5031b3",
+      "name": "Preparar Error Cliente",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        50,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.final_response }}",
+        "options": {}
+      },
+      "id": "2f9bc596-e80a-4f5b-8343-9ac0d598d84d",
+      "name": "Responder App",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        600,
+        150
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Client Gateway": {
+      "main": [
+        [
+          {
+            "node": "Validar Sesion Cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar Sesion Cliente": {
+      "main": [
+        [
+          {
+            "node": "Normalizar Sesion Cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar Sesion Cliente": {
+      "main": [
+        [
+          {
+            "node": "¿Autorizado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Autorizado?": {
+      "main": [
+        [
+          {
+            "node": "Actualizar Ultimo Uso",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Preparar Error Cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Actualizar Ultimo Uso": {
+      "main": [
+        [
+          {
+            "node": "Router de Acciones Cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Error Cliente": {
+      "main": [
+        [
+          {
+            "node": "Responder App",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

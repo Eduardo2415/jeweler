@@ -1,0 +1,67 @@
+{
+  "collection": "ji_usuarios_admin",
+  "meta": {
+    "icon": "verified_user",
+    "note": "Usuarios autorizados para acceder al panel administrativo de Juan Inversiones.",
+    "display_template": "{{nombre}} ({{email}})"
+  },
+  "fields": [
+    {
+      "field": "nombre",
+      "type": "string",
+      "meta": {
+        "interface": "input",
+        "required": true,
+        "width": "half",
+        "options": {
+          "placeholder": "Nombre del Administrador"
+        }
+      },
+      "schema": {
+        "is_nullable": false
+      }
+    },
+    {
+      "field": "email",
+      "type": "string",
+      "meta": {
+        "interface": "input",
+        "required": true,
+        "width": "half",
+        "options": {
+          "placeholder": "admin@juaninversiones.com"
+        }
+      },
+      "schema": {
+        "is_nullable": false
+      }
+    },
+    {
+      "field": "password",
+      "type": "string",
+      "meta": {
+        "interface": "input-hash",
+        "required": true,
+        "options": {
+          "masked": true
+        }
+      },
+      "schema": {
+        "is_nullable": false
+      }
+    },
+    {
+      "field": "estado_activo",
+      "type": "boolean",
+      "meta": {
+        "interface": "boolean",
+        "required": true,
+        "width": "half"
+      },
+      "schema": {
+        "default_value": true,
+        "is_nullable": false
+      }
+    }
+  ]
+}

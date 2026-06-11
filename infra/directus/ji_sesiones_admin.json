@@ -1,0 +1,64 @@
+{
+  "collection": "ji_sesiones_admin",
+  "meta": {
+    "icon": "alarm",
+    "note": "Sesiones activas de usuarios administradores de Juan Inversiones.",
+    "display_template": "{{admin_token}}"
+  },
+  "fields": [
+    {
+      "field": "admin_token",
+      "type": "string",
+      "meta": {
+        "interface": "input",
+        "required": true
+      },
+      "schema": {
+        "is_nullable": false
+      }
+    },
+    {
+      "field": "fecha_expira",
+      "type": "dateTime",
+      "meta": {
+        "interface": "datetime",
+        "required": true
+      },
+      "schema": {
+        "is_nullable": false
+      }
+    },
+    {
+      "field": "estado_activo",
+      "type": "boolean",
+      "meta": {
+        "interface": "boolean",
+        "required": true
+      },
+      "schema": {
+        "default_value": true,
+        "is_nullable": false
+      }
+    },
+    {
+      "field": "ultimo_uso",
+      "type": "dateTime",
+      "meta": {
+        "interface": "datetime"
+      },
+      "schema": {
+        "is_nullable": true
+      }
+    },
+    {
+      "field": "usuario_id",
+      "type": "integer",
+      "meta": {
+        "interface": "input"
+      },
+      "schema": {
+        "is_nullable": true
+      }
+    }
+  ]
+}

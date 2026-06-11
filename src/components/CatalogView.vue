@@ -1,14 +1,22 @@
 <template>
   <div class="catalog-root">
-    <!-- Header (mobile-first, centered brand) -->
+    <!-- Header (mobile-first, centered brand, luxury-grade) -->
     <header class="header flex items-center justify-between px-4 py-3">
-      <q-btn flat round dense icon="menu" @click="$emit('toggle-menu')" />
-      <div class="brand">
-        JUAN INVERSIONES
-        <q-img src="" class="logo-placeholder" />
+      <q-btn flat round class="menu-trigger-btn" @click="$emit('toggle-menu')">
+        <div class="hamburger-lines">
+          <span class="line line-1"></span>
+          <span class="line line-2"></span>
+        </div>
+      </q-btn>
+      <div class="brand font-serif flex items-center gap-2">
+        <q-avatar size="28px" class="brand-avatar">
+          <q-img src="/logo1.jpeg" />
+        </q-avatar>
+        <span>JUAN INVERSIONES</span>
       </div>
-      <q-btn flat round dense icon="shopping_bag" @click="$emit('open-cart')">
-        <q-badge color="accent" floating rounded v-if="cartCount">{{ cartCount }}</q-badge>
+      <q-btn flat round class="cart-trigger-btn" @click="$emit('open-cart')">
+        <q-icon name="shopping_bag" size="20px" />
+        <q-badge color="accent" floating rounded v-if="cartCount" class="custom-cart-badge" :class="{ 'badge-pulse': animateBadge }">{{ cartCount }}</q-badge>
       </q-btn>
     </header>
 
@@ -31,15 +39,15 @@
     <!-- Categories horizontal scroll -->
     <section class="categories">
       <div class="container">
-        <div class="row scroll">
+        <div class="row scroll hide-scrollbar">
           <div
             v-for="cat in categories"
-            :key="cat.name"
+            :key="cat.value"
             class="cat-item"
-            @click="selectedCategory = cat.name"
+            @click="$emit('update:activeCategory', cat.value)"
           >
-            <ImageWithFallback :src="cat.image" class-name="cat-img" />
-            <div :class="['cat-label', { active: selectedCategory === cat.name }]">
+            <ImageWithFallback :src="cat.image" :class-name="'cat-img' + (activeCategory === cat.value ? ' active' : '')" />
+            <div :class="['cat-label', { active: activeCategory === cat.value }]">
               {{ cat.name }}
             </div>
           </div>
@@ -64,8 +72,17 @@
             <div class="info">
               <h3 class="p-name">{{ product.name }}</h3>
               <div class="row-between">
-                <div class="price">{{ product.price }}</div>
-                <button class="add" @click.stop="addToCart(product)">＋</button>
+                <div class="price">{{ formatPrice(product.price) }}</div>
+                
+                <!-- Quantity selector if already in cart -->
+                <div v-if="getProductQuantity(product.id) > 0" class="qty-selector-pill flex items-center justify-between">
+                  <q-btn flat round size="xs" icon="remove" class="qty-btn" @click.stop.prevent="decreaseQuantity(product.id)" />
+                  <span class="qty-val">{{ getProductQuantity(product.id) }}</span>
+                  <q-btn flat round size="xs" icon="add" class="qty-btn" @click.stop.prevent="increaseQuantity(product)" />
+                </div>
+                
+                <!-- Add button if not in cart -->
+                <q-btn v-else flat round dense class="add-btn" icon="add" @click.stop.prevent="addToCart(product)" />
               </div>
             </div>
           </article>
@@ -76,37 +93,29 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
+import { useQuasar } from 'quasar'
 import { useShopStore } from '../stores/shop'
 import ImageWithFallback from './ImageWithFallback.vue'
 
-const emit = defineEmits(['view-product', 'toggle-menu', 'open-cart'])
+const props = defineProps({
+  categories: { type: Array, required: true },
+  activeCategory: { type: String, required: true },
+})
+
+const emit = defineEmits(['view-product', 'toggle-menu', 'open-cart', 'update:activeCategory'])
 const store = useShopStore()
+const $q = useQuasar()
 
-const categories = ref([
-  { name: 'Rings', image: 'https://images.unsplash.com/photo-1499899833954-5ecd9439d17f?w=500' },
-  { name: 'Chains', image: 'https://images.unsplash.com/photo-1596213411964-ee96819a396c?w=500' },
-  {
-    name: 'Bracelets',
-    image: 'https://images.unsplash.com/photo-1612437830721-4f8eab90c5a9?w=500',
-  },
-  { name: 'Earrings', image: 'https://images.unsplash.com/photo-1704957205327-9fbd44d683b7?w=500' },
-  { name: 'Relojes', image: 'https://images.unsplash.com/photo-1519741495165-61d2d3dd0a2a?w=500' },
-  {
-    name: 'Compromiso',
-    image: 'https://images.unsplash.com/photo-1503602642458-232111445657?w=500',
-  },
-])
-
-const selectedCategory = ref('Rings')
 const favorites = ref(new Set())
+const animateBadge = ref(false)
 
-// Local mock products (temporary replacement for store.products)
+// Local mock products with numeric prices
 const products = ref([
   {
     id: 1,
     name: 'Eternal Solitaire Ring',
-    price: '$3,850',
+    price: 3850,
     image: 'https://images.unsplash.com/photo-1499899833954-5ecd9439d17f?w=1080',
     category: 'Rings',
     description: 'A timeless 18k gold solitaire ring featuring a brilliant-cut diamond.',
@@ -114,7 +123,7 @@ const products = ref([
   {
     id: 2,
     name: 'Diamond Cascade Necklace',
-    price: '$8,200',
+    price: 8200,
     image: 'https://images.unsplash.com/photo-1596213411964-ee96819a396c?w=1080',
     category: 'Chains',
     description: 'An exquisite diamond necklace that gracefully adorns the neckline.',
@@ -122,7 +131,7 @@ const products = ref([
   {
     id: 3,
     name: 'Heritage Gold Bracelet',
-    price: '$2,950',
+    price: 2950,
     image: 'https://images.unsplash.com/photo-1612437830721-4f8eab90c5a9?w=1080',
     category: 'Bracelets',
     description: 'A luxurious 22k gold bracelet with intricate detailing.',
@@ -130,19 +139,72 @@ const products = ref([
   {
     id: 4,
     name: 'Pearl Elegance Earrings',
-    price: '$1,680',
+    price: 1680,
     image: 'https://images.unsplash.com/photo-1704957205327-9fbd44d683b7?w=1080',
     category: 'Earrings',
     description: 'Refined pearl earrings set in white gold.',
   },
 ])
 
+// Watch cart length changes to pulse the badge
+watch(() => store.cart.length, (newVal, oldVal) => {
+  if (newVal > oldVal) {
+    animateBadge.value = true
+    setTimeout(() => {
+      animateBadge.value = false
+    }, 350)
+  }
+})
+
 const cartCount = computed(() => store.cart.length)
 
 const filteredProducts = computed(() => {
-  if (!selectedCategory.value) return products.value
-  return products.value.filter((p) => p.category === selectedCategory.value)
+  const catalogList = (store.products && store.products.length > 0) ? store.products : products.value
+  const activeCat = props.activeCategory
+  if (!activeCat) return catalogList
+
+  const categoryMap = {
+    'Rings': 1,
+    'Chains': 2,
+    'Relojes': 3,
+    'Bracelets': 4,
+    'Earrings': 5,
+    'Collares': 6,
+    'Compromiso': 6
+  }
+  const numericId = categoryMap[activeCat]
+
+  return catalogList.filter((p) => {
+    const matchesString = p.category && typeof p.category === 'string' && p.category.toLowerCase() === activeCat.toLowerCase()
+    const matchesId = p.categoryId !== undefined && p.categoryId === numericId
+    return matchesString || matchesId
+  })
 })
+
+
+function formatPrice(value) {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0
+  }).format(value)
+}
+
+function getProductQuantity(productId) {
+  const item = store.cart.find((i) => i.id === productId)
+  return item ? item.quantity : 0
+}
+
+function increaseQuantity(product) {
+  store.addToCart(product, 1)
+}
+
+function decreaseQuantity(productId) {
+  const item = store.cart.find((i) => i.id === productId)
+  if (item) {
+    store.updateQuantity(productId, item.quantity - 1)
+  }
+}
 
 function toggleFavorite(id) {
   if (favorites.value.has(id)) favorites.value.delete(id)
@@ -150,7 +212,15 @@ function toggleFavorite(id) {
 }
 
 function addToCart(product) {
-  store.addToCart(product)
+  store.addToCart(product, 1)
+  $q.notify({
+    message: 'Pieza agregada al carrito',
+    caption: `${product.name} ha sido añadida.`,
+    position: 'bottom-right',
+    timeout: 1800,
+    classes: 'luxury-toast',
+    icon: 'check_circle'
+  })
 }
 
 function open(product) {
@@ -171,33 +241,101 @@ function open(product) {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 90;
+  background: rgba(247, 242, 238, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(180, 127, 96, 0.08);
+  padding: 12px 16px;
 }
-.icon-btn {
-  background: transparent;
-  border: 0;
-  font-size: 20px;
+.menu-trigger-btn {
+  width: 42px;
+  height: 42px;
+  min-height: 42px;
+  padding: 0;
+  color: #333333;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(180, 127, 96, 0.15);
+  border-radius: 50%;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  &:hover {
+    background: rgba(180, 127, 96, 0.08);
+    border-color: #b47f60;
+  }
+}
+.hamburger-lines {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 18px;
+  height: 10px;
+  margin: 0 auto;
+}
+.line {
+  display: block;
+  height: 1.5px;
+  width: 100%;
+  background-color: #333333;
+  border-radius: 1px;
+  transition: all 0.25s ease;
+}
+.line-2 {
+  width: 65%;
+  align-self: flex-start;
+}
+.menu-trigger-btn:hover .line-2 {
+  width: 100%;
 }
 .brand {
   font-family: 'Playfair Display', serif;
-  font-size: 18px;
+  font-size: 19px;
   text-transform: uppercase;
   letter-spacing: 2px;
   font-weight: 700;
+  color: #333333;
   display: flex;
   align-items: center;
+  gap: 8px;
 }
-.logo-placeholder {
-  width: 36px;
-  height: 36px;
-  margin-left: 8px;
-  background: transparent;
+.brand-avatar {
+  border: 1px solid rgba(180, 127, 96, 0.2);
+  background: #ffffff;
 }
-.badge {
-  background: #b47f60;
-  color: white;
-  padding: 2px 6px;
+.cart-trigger-btn {
+  width: 42px;
+  height: 42px;
+  min-height: 42px;
+  padding: 0;
+  color: #333333;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(180, 127, 96, 0.15);
+  border-radius: 50%;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  &:hover {
+    background: rgba(180, 127, 96, 0.08);
+    border-color: #b47f60;
+    color: #b47f60;
+  }
+}
+.custom-cart-badge {
+  background-color: #b47f60 !important;
+  color: #ffffff;
+  top: -2px;
+  right: -2px;
+  padding: 3px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  border: 1.5px solid #f7f2ee;
   border-radius: 10px;
-  margin-left: 6px;
 }
 
 /* Hero — mobile: bottom-rounded; desktop: fully rounded with slight top margin */
@@ -247,27 +385,51 @@ function open(product) {
 .categories .scroll {
   display: flex;
   gap: 24px;
-  padding: 18px 0;
+  padding: 18px 8px;
   overflow-x: auto;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
+  -webkit-overflow-scrolling: touch;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  scrollbar-width: none;
+}
+@media (min-width: 768px) {
+  .categories .scroll {
+    justify-content: center;
+  }
 }
 .cat-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-width: 92px;
+  min-width: 80px;
+  cursor: pointer;
 }
 .cat-img {
-  width: 70px;
-  height: 70px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
   object-fit: cover;
+  border: 1px solid rgba(180, 127, 96, 0.15);
+  padding: 2px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  background: #ffffff;
+}
+.cat-img.active {
+  border-color: #b47f60;
+  box-shadow: 0 6px 16px rgba(180, 127, 96, 0.25);
+  transform: translateY(-2px);
 }
 .cat-label {
   margin-top: 8px;
   font-size: 12px;
   color: #666;
+  font-weight: 500;
+  transition: color 0.2s ease;
 }
 .cat-label.active {
   color: #b47f60;
@@ -328,12 +490,23 @@ function open(product) {
   color: #b47f60;
   font-weight: 700;
 }
-.add {
-  background: #f7f2ee;
+.add-btn {
+  background-color: #f7f2ee;
+  color: #b47f60;
   border-radius: 50%;
-  border: 0;
   width: 36px;
   height: 36px;
+  min-height: 36px;
+  min-width: 36px;
+  padding: 0;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  z-index: 5;
+  &:hover {
+    background-color: #b47f60;
+    color: #ffffff;
+    transform: scale(1.08);
+  }
 }
 
 @media (min-width: 900px) {
@@ -351,5 +524,38 @@ function open(product) {
   .hero-title {
     font-size: 40px;
   }
+}
+
+.qty-selector-pill {
+  background-color: #f7f2ee;
+  border-radius: 20px;
+  height: 36px;
+  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(180, 127, 96, 0.15);
+  min-width: 96px;
+  position: relative;
+  z-index: 5;
+}
+.qty-btn {
+  color: #b47f60;
+  padding: 0;
+  min-width: 26px;
+  min-height: 26px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  &:hover {
+    background-color: rgba(180, 127, 96, 0.1);
+  }
+}
+.qty-val {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333333;
+  min-width: 16px;
+  text-align: center;
 }
 </style>

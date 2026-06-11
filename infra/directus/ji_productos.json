@@ -1,0 +1,75 @@
+{
+  "collection": "ji_productos",
+  "meta": {
+    "icon": "diamond",
+    "note": "Catálogo de piezas de joyería y relojería de Juan Inversiones.",
+    "display_template": "{{name}} (${{price}})"
+  },
+  "fields": [
+    {
+      "field": "name",
+      "type": "string",
+      "meta": {
+        "interface": "input",
+        "required": true
+      },
+      "schema": {
+        "is_nullable": false
+      }
+    },
+    {
+      "field": "categoryId",
+      "type": "integer",
+      "meta": {
+        "interface": "input",
+        "required": true
+      },
+      "schema": {
+        "is_nullable": false
+      }
+    },
+    {
+      "field": "price",
+      "type": "integer",
+      "meta": {
+        "interface": "input",
+        "required": true
+      },
+      "schema": {
+        "is_nullable": false
+      }
+    },
+    {
+      "field": "description",
+      "type": "text",
+      "meta": {
+        "interface": "textarea",
+        "required": true
+      },
+      "schema": {
+        "is_nullable": false
+      }
+    },
+    {
+      "field": "image",
+      "type": "string",
+      "meta": {
+        "interface": "input"
+      },
+      "schema": {
+        "is_nullable": true
+      }
+    },
+    {
+      "field": "rating",
+      "type": "float",
+      "meta": {
+        "interface": "input"
+      },
+      "schema": {
+        "default_value": 5.0,
+        "is_nullable": true
+      }
+    }
+  ]
+}

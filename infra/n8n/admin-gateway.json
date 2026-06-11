@@ -1,0 +1,322 @@
+{
+  "name": "API - Admin Gateway",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "admin-gateway",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "5a4f7831-7b19-482a-a92f-a9cb6014e782",
+      "name": "Webhook Admin Gateway",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1000,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.DIRECTUS_URL }}/items/ji_sesiones_admin",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filter[admin_token][_eq]",
+              "value": "={{ $json.body.admin_token }}"
+            },
+            {
+              "name": "filter[estado_activo][_eq]",
+              "value": "true"
+            },
+            {
+              "name": "fields",
+              "value": "id,admin_token,fecha_expira,estado_activo"
+            },
+            {
+              "name": "limit",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "e305e551-789a-4c22-b6ab-bcbece44012c",
+      "name": "Validar Sesion Admin",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -750,
+        150
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "7tjiKRmwXUpshjFn",
+          "name": "directus n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $('Webhook Admin Gateway').item.json.body || {};\nconst sesion = $json.data?.[0];\n\nif (!body.admin_token) {\n  return [{\n    json: {\n      autorizado: false,\n      final_response: {\n        status: 'error',\n        message: 'Token de administrador requerido.'\n      }\n    }\n  }];\n}\n\nif (!body.action) {\n  return [{\n    json: {\n      autorizado: false,\n      final_response: {\n        status: 'error',\n        message: 'Acción requerida.'\n      }\n    }\n  }];\n}\n\nif (!sesion) {\n  return [{\n    json: {\n      autorizado: false,\n      final_response: {\n        status: 'error',\n        message: 'Sesión administrativa inválida o inactiva.'\n      }\n    }\n  }];\n}\n\nconst fechaExpira = new Date(sesion.fecha_expira);\nconst ahora = new Date();\nif (fechaExpira <= ahora) {\n  return [{\n    json: {\n      autorizado: false,\n      final_response: {\n        status: 'error',\n        message: 'Sesión administrativa expirada.'\n      }\n    }\n  }];\n}\n\nconst allowedActions = ['get-products', 'create-product', 'upload-image'];\nif (!allowedActions.includes(body.action)) {\n  return [{\n    json: {\n      autorizado: false,\n      final_response: {\n        status: 'error',\n        message: `Acción no permitida para el panel de administración: ${body.action}`\n      }\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    autorizado: true,\n    action: body.action,\n    payload: body.payload || {},\n    session_id: sesion.id\n  }\n}];"
+      },
+      "id": "79b882e3-2cb0-464a-a039-37f8d752945a",
+      "name": "Normalizar Sesion Admin",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -500,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.autorizado }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "358ef902-12b4-4fa4-a212-be20ac28bd2e",
+      "name": "¿Autorizado?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -250,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=http://directus-dpfk3eo6bvn57ljy7z0vlsek:8055/items/ji_sesiones_admin/{{ $('Normalizar Sesion Admin').item.json.session_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"ultimo_uso\": new Date().toISOString() } }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "92f7c001-fd34-4b51-b921-2a1cef5031b2",
+      "name": "Actualizar Ultimo Uso",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        50,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "7tjiKRmwXUpshjFn",
+          "name": "directus n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "a1b2c3d4-1111-1111-1111-aaaaaaaaaaaa",
+                    "leftValue": "={{ $('Normalizar Sesion Admin').item.json.action }}",
+                    "rightValue": "get-products",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "get-products"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "b2c3d4e5-2222-2222-2222-bbbbbbbbbbbb",
+                    "leftValue": "={{ $('Normalizar Sesion Admin').item.json.action }}",
+                    "rightValue": "create-product",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "create-product"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c3d4e5f6-3333-3333-3333-cccccccccccc",
+                    "leftValue": "={{ $('Normalizar Sesion Admin').item.json.action }}",
+                    "rightValue": "upload-image",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "upload-image"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3bbff201-1b2c-47a3-b921-2a1cef5031b2",
+      "name": "Router de Acciones Admin",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        300,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    final_response: $('Normalizar Sesion Admin').item.json.final_response || {\n      status: 'error',\n      message: 'Acceso administrativo denegado.'\n    }\n  }\n}];"
+      },
+      "id": "7b2c8031-fd13-4b51-b921-2a1cef5031b2",
+      "name": "Preparar Error Admin",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        50,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.final_response }}",
+        "options": {}
+      },
+      "id": "2f9bc596-e80a-4f5b-8343-9ac0d598d84d",
+      "name": "Responder App",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        600,
+        150
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Admin Gateway": {
+      "main": [
+        [
+          {
+            "node": "Validar Sesion Admin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar Sesion Admin": {
+      "main": [
+        [
+          {
+            "node": "Normalizar Sesion Admin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar Sesion Admin": {
+      "main": [
+        [
+          {
+            "node": "¿Autorizado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Autorizado?": {
+      "main": [
+        [
+          {
+            "node": "Actualizar Ultimo Uso",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Preparar Error Admin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Actualizar Ultimo Uso": {
+      "main": [
+        [
+          {
+            "node": "Router de Acciones Admin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Error Admin": {
+      "main": [
+        [
+          {
+            "node": "Responder App",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

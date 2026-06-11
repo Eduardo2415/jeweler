@@ -2,13 +2,24 @@
   <q-page class="bg-custom-cream min-h-screen">
     <NavigationMenu
       :open="menuOpen"
-      :items="menuItems"
+      :categories="categories"
+      :active-category="selectedCategory"
       @close="menuOpen = false"
-      @select="onMenuSelect"
+      @select-category="onCategorySelect"
+      @select-screen="onScreenSelect"
+    />
+
+    <CartDrawer
+      :open="cartOpen"
+      @close="cartOpen = false"
+      @checkout="currentScreen = 'checkout'"
     />
 
     <CatalogView
       v-if="currentScreen === 'catalog'"
+      :categories="categories"
+      :active-category="selectedCategory"
+      @update:active-category="selectedCategory = $event"
       @view-product="openProduct"
       @toggle-menu="menuOpen = true"
       @open-cart="openCart"
@@ -19,11 +30,24 @@
       :product="selectedProduct"
       @back="currentScreen = 'catalog'"
       @add-to-cart="
-        (p) => {
-          addToCart(p)
+        ({ product, qty }) => {
+          addToCart(product, qty)
           currentScreen = 'catalog'
         }
       "
+      @toggle-menu="menuOpen = true"
+      @open-cart="openCart"
+    />
+
+    <CheckoutView
+      v-else-if="currentScreen === 'checkout'"
+      @back="currentScreen = 'catalog'"
+      @navigate="currentScreen = $event"
+    />
+
+    <OrdersHistoryView
+      v-else-if="currentScreen === 'orders'"
+      @back="currentScreen = 'catalog'"
     />
 
     <SiteFooter />
@@ -36,6 +60,9 @@ import { ref } from 'vue'
 import CatalogView from '../components/CatalogView.vue'
 import ProductDetail from '../components/ProductDetail.vue'
 import NavigationMenu from '../components/NavigationMenu.vue'
+import CartDrawer from '../components/CartDrawer.vue'
+import CheckoutView from '../components/CheckoutView.vue'
+import OrdersHistoryView from '../components/OrdersHistoryView.vue'
 import SiteFooter from '../components/SiteFooter.vue'
 import { useShopStore } from '../stores/shop'
 
@@ -43,29 +70,41 @@ const store = useShopStore()
 
 const currentScreen = ref('catalog')
 const menuOpen = ref(false)
+const cartOpen = ref(false)
 const selectedProduct = ref(null)
+const selectedCategory = ref('Rings')
 
-const menuItems = ['Home', 'New Arrivals', 'Rings', 'Necklaces & Chains', 'Bracelets', 'About Us']
+const categories = ref([
+  { name: 'Anillos', value: 'Rings', image: 'https://images.unsplash.com/photo-1499899833954-5ecd9439d17f?w=500' },
+  { name: 'Cadenas', value: 'Chains', image: 'https://images.unsplash.com/photo-1596213411964-ee96819a396c?w=500' },
+  { name: 'Brazaletes', value: 'Bracelets', image: 'https://images.unsplash.com/photo-1612437830721-4f8eab90c5a9?w=500' },
+  { name: 'Aretes', value: 'Earrings', image: 'https://images.unsplash.com/photo-1704957205327-9fbd44d683b7?w=500' },
+  { name: 'Relojes', value: 'Relojes', image: 'https://images.unsplash.com/photo-1519741495165-61d2d3dd0a2a?w=500' },
+  { name: 'Compromiso', value: 'Compromiso', image: 'https://images.unsplash.com/photo-1503602642458-232111445657?w=500' },
+])
 
 const openProduct = (product) => {
   selectedProduct.value = product
   currentScreen.value = 'detail'
 }
 
-const addToCart = (product) => {
-  store.addToCart(product)
+const addToCart = (product, qty = 1) => {
+  store.addToCart(product, qty)
 }
 
 const openCart = () => {
-  // placeholder: could open a cart drawer or navigate to cart
-  console.log('open cart')
+  cartOpen.value = true
 }
 
-const onMenuSelect = (item) => {
+const onCategorySelect = (categoryValue) => {
+  selectedCategory.value = categoryValue
+  currentScreen.value = 'catalog'
   menuOpen.value = false
-  // basic demo routing behavior
-  if (item === 'Home') currentScreen.value = 'onboarding'
-  if (item === 'New Arrivals') currentScreen.value = 'catalog'
+}
+
+const onScreenSelect = (screenName) => {
+  currentScreen.value = screenName
+  menuOpen.value = false
 }
 </script>
 

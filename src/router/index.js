@@ -26,5 +26,18 @@ export default defineRouter(function (/* { store, ssrContext } */) {
     history: createHistory(process.env.VUE_ROUTER_BASE)
   })
 
+  Router.beforeEach((to, from, next) => {
+    if (to.path.startsWith('/admin') && to.path !== '/admin/login') {
+      const token = localStorage.getItem('ji_admin_token')
+      if (!token) {
+        next('/admin/login')
+      } else {
+        next()
+      }
+    } else {
+      next()
+    }
+  })
+
   return Router
 })

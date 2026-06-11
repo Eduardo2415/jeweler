@@ -1,0 +1,258 @@
+{
+  "name": "API - Admin Login",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "admin-login",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "1a3d8f51-4271-4f16-9278-5bfe6509a2fd",
+      "name": "Webhook Login Admin",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1000,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.DIRECTUS_URL }}/items/ji_usuarios_admin",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filter[email][_eq]",
+              "value": "={{ $json.body.email }}"
+            },
+            {
+              "name": "filter[password][_eq]",
+              "value": "={{ $json.body.password }}"
+            },
+            {
+              "name": "filter[estado_activo][_eq]",
+              "value": "true"
+            },
+            {
+              "name": "fields",
+              "value": "id,nombre,email,estado_activo"
+            },
+            {
+              "name": "limit",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "6b16dfc9-a3d8-40ed-a4cc-8c670af65961",
+      "name": "Buscar Administrador",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -750,
+        150
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "7tjiKRmwXUpshjFn",
+          "name": "directus n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $('Webhook Login Admin').item.json.body || {};\nconst admin = $json.data?.[0];\n\nif (!body.email || !body.password) {\n  return [{\n    json: {\n      ok: false,\n      final_response: {\n        status: 'error',\n        message: 'Email y contraseña requeridos'\n      }\n    }\n  }];\n}\n\nif (!admin) {\n  return [{\n    json: {\n      ok: false,\n      final_response: {\n        status: 'error',\n        message: 'Credenciales inválidas'\n      }\n    }\n  }];\n}\n\n// generar token\nconst token = \n  Date.now().toString(36) +\n  Math.random().toString(36).substring(2) +\n  Math.random().toString(36).substring(2);\n\nconst fechaCreacion = new Date();\nconst fechaExpira = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);\n\nreturn [{\n  json: {\n    ok: true,\n    admin_token: token,\n    fecha_creacion: fechaCreacion.toISOString(),\n    fecha_expira: fechaExpira.toISOString(),\n    admin: {\n      id: admin.id,\n      nombre: admin.nombre,\n      email: admin.email\n    }\n  }\n}];"
+      },
+      "id": "130077ce-0064-40e7-a26d-9d399be49922",
+      "name": "Crear Token Sesion",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -500,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.ok }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "e9a8268f-d757-4734-8fc7-40765345f52c",
+      "name": "¿Login OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -250,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DIRECTUS_URL }}/items/ji_sesiones_admin",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"usuario_id\": {{ $json.admin.id }},\n  \"admin_token\": \"{{ $json.admin_token }}\",\n  \"fecha_expira\": \"{{ $json.fecha_expira }}\",\n  \"estado_activo\": true,\n  \"ultimo_uso\": \"{{ $json.fecha_creacion }}\"\n}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "9fff5fbf-f413-41bf-ba27-4ec725a1e9f0",
+      "name": "Guardar Sesion",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        0,
+        50
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "7tjiKRmwXUpshjFn",
+          "name": "directus n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const login = $('Crear Token Sesion').item.json;\n\nreturn [{\n  json: {\n    final_response: {\n      status: 'success',\n      message: 'Login correcto.',\n      admin_token: login.admin_token,\n      fecha_expira: login.fecha_expira,\n      admin: login.admin\n    }\n  }\n}];"
+      },
+      "id": "07a6717b-b039-4442-b96e-7b4650cf38af",
+      "name": "Preparar Respuesta OK",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        250,
+        50
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    final_response: $('Crear Token Sesion').item.json.final_response || {\n      status: 'error',\n      message: 'Credenciales inválidas.'\n    }\n  }\n}];"
+      },
+      "id": "68c66fa3-12d8-4b07-8ee7-a550bab1cce0",
+      "name": "Preparar Respuesta Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        250
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.final_response }}",
+        "options": {}
+      },
+      "id": "2f9bc596-e80a-4f5b-8343-9ac0d598d84e",
+      "name": "Responder App",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        500,
+        150
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Login Admin": {
+      "main": [
+        [
+          {
+            "node": "Buscar Administrador",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Administrador": {
+      "main": [
+        [
+          {
+            "node": "Crear Token Sesion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crear Token Sesion": {
+      "main": [
+        [
+          {
+            "node": "¿Login OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Login OK?": {
+      "main": [
+        [
+          {
+            "node": "Guardar Sesion",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Preparar Respuesta Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar Sesion": {
+      "main": [
+        [
+          {
+            "node": "Preparar Respuesta OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Respuesta OK": {
+      "main": [
+        [
+          {
+            "node": "Responder App",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Respuesta Error": {
+      "main": [
+        [
+          {
+            "node": "Responder App",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

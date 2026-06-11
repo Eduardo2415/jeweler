@@ -1,0 +1,195 @@
+{
+  "name": "API - Upload Image",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "upload-image",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "e3a4f831-7b19-482a-a92f-a9cb6014e784",
+      "name": "Webhook Upload Image",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -600,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const binaryData = $input.item.binary || {};\nconst fileKey = Object.keys(binaryData)[0];\n\nif (!fileKey) {\n  return [{\n    json: {\n      ok: false,\n      final_response: {\n        status: 'error',\n        message: 'No se detectó ningún archivo binario en la petición.'\n      }\n    }\n  }];\n}\n\n// Generate a unique filename using timestamp\nconst ext = binaryData[fileKey].fileExtension || 'jpg';\nconst generatedName = `joyas-${Date.now()}-${Math.floor(Math.random()*10000)}.${ext}`;\n\nreturn [{\n  json: {\n    ok: true,\n    binaryPropertyName: fileKey,\n    fileName: generatedName\n  }\n}];"
+      },
+      "id": "528ef902-12b4-4fa4-a212-be20ac28bd2d",
+      "name": "Normalizar Archivo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -350,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.ok }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "d358ef92-12b4-4fa4-a212-be20ac28bd2e",
+      "name": "¿Archivo Valido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -100,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "joyeria-assets",
+        "fileKey": "={{ $json.fileName }}",
+        "binaryPropertyName": "={{ $json.binaryPropertyName }}",
+        "additionalFields": {
+          "acl": "public-read"
+        }
+      },
+      "id": "a105e551-789a-4c22-b6ab-bcbece44012e",
+      "name": "Subir a MinIO (S3)",
+      "type": "n8n-nodes-base.awsS3",
+      "typeVersion": 2,
+      "position": [
+        150,
+        50
+      ],
+      "credentials": {
+        "aws": {
+          "id": "9tjiKRmwXUpshjFn",
+          "name": "minio s3 credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const key = $('Subir a MinIO (S3)').item.json.key || $('Normalizar Archivo').item.json.fileName;\nconst baseUrl = process.env.MINIO_PUBLIC_URL || 'https://minio.tu-dominio.com/joyeria-assets';\n\nreturn [{\n  json: {\n    final_response: {\n      status: 'success',\n      url: `${baseUrl}/${key}`\n    }\n  }\n}];"
+      },
+      "id": "b79b882e-2cb0-464a-a039-37f8d752945d",
+      "name": "Respuesta Exito Carga",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        50
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    final_response: $('Normalizar Archivo').item.json.final_response || {\n      status: 'error',\n      message: 'Fallo al procesar o cargar la imagen.'\n    }\n  }\n}];"
+      },
+      "id": "c7b2c803-fd13-4b51-b921-2a1cef5031b5",
+      "name": "Respuesta Error Carga",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        150,
+        250
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.final_response }}",
+        "options": {}
+      },
+      "id": "d2f9bc59-e80a-4f5b-8343-9ac0d598d84e",
+      "name": "Responder App",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        650,
+        150
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Upload Image": {
+      "main": [
+        [
+          {
+            "node": "Normalizar Archivo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar Archivo": {
+      "main": [
+        [
+          {
+            "node": "¿Archivo Valido?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Archivo Valido?": {
+      "main": [
+        [
+          {
+            "node": "Subir a MinIO (S3)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respuesta Error Carga",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Subir a MinIO (S3)": {
+      "main": [
+        [
+          {
+            "node": "Respuesta Exito Carga",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respuesta Exito Carga": {
+      "main": [
+        [
+          {
+            "node": "Responder App",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respuesta Error Carga": {
+      "main": [
+        [
+          {
+            "node": "Responder App",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
